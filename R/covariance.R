@@ -1,11 +1,10 @@
-#'
-#' covaraince processes for teamObject
-#'
-#'
-#'
-#'
-library(R6)
-library(nlme)
+#
+# covaraince processes for teamObject
+#
+#
+
+
+#'OUcov
 #'
 #' Ornstein Uhlenbeck process
 #'
@@ -20,13 +19,13 @@ OUcov <-function(d, param){
   Cov   <- (sigma^2 /(2 * theta) ) * exp(-theta * d)
   return(Cov)
 }
-#'
+#'Xcov
 #'
 #' Xcov covariance structure obtanied through random effect i.e
 #' The covariance of Y from the model
 #' Y = X*Z where Z ~ N(0,\Sigma)
 #'
-Xcov <- R6Class("Xcov", list(
+Xcov <- R6::R6Class("Xcov", list(
   d = NULL,
   initialize = function(d) {self$d <- d},
   get_name = function(){return('XCovSmooth')},
@@ -48,6 +47,7 @@ Xcov <- R6Class("Xcov", list(
   }
 ))
 
+#'XcovSmooth
 #'
 #' A X covaraince with expontial smoothing
 #' The covariance of Y from the model
@@ -56,7 +56,7 @@ Xcov <- R6Class("Xcov", list(
 #' @param obj - needs to contain X,d which is list of times
 #'
 
-XcovSmooth <- R6Class("XcovSmooth", list(
+XcovSmooth <- R6::R6Class("XcovSmooth", list(
   d = NULL,
   initialize = function(d) {self$d <- d},
   get_name = function(){return('XCovSmooth')},
@@ -82,6 +82,7 @@ XcovSmooth <- R6Class("XcovSmooth", list(
   }
 ))
 
+#'expWeightDiag
 #'
 #'
 #' weighted covariance
@@ -89,7 +90,7 @@ XcovSmooth <- R6Class("XcovSmooth", list(
 #' Z where Z ~ N(0, exp(E%*% delta )) where
 #' W is n x d
 #'
-expWeightDiag <- R6Class("expWeightDiag", list(
+expWeightDiag <- R6::R6Class("expWeightDiag", list(
   d = NULL,
   initialize = function(d) {self$d <- d},
   get_name = function(){return('diagonal exp')},
