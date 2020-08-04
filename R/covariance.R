@@ -35,6 +35,10 @@ Xcov <- R6::R6Class("Xcov", list(
     Sigma <- as.matrix(nlme::pdLogChol(param[1:length(param)]))
     return(Sigma)
   },
+  get_mean = function(param, obj){
+    m <- rep(0, self$d)
+    return(m)
+  },
   get_AtCA  = function(param, obj){
     X <- obj$X
     Sigma <- self$get_Cov(param, obj)
@@ -61,6 +65,10 @@ XcovSmooth <- R6::R6Class("XcovSmooth", list(
   initialize = function(d) {self$d <- d},
   get_name = function(){return('XCovSmooth')},
   get_param_length = function(){return(self$d*(self$d+1)/2 + 1)},
+  get_mean = function(param, obj){
+    m <- rep(0, self$d)
+    return(m)
+  },
   get_Cov = function(param,obj) {
 
     Sigma <- as.matrix(nlme::pdLogChol(param[2:length(param)]))
@@ -104,8 +112,62 @@ expWeightDiag <- R6::R6Class("expWeightDiag", list(
     Sigma <- self$get_Cov(param, obj, cov_name)
     return(Sigma)
   },
+  
+  get_mean = function(param, obj){
+    m <- rep(0, dim(obj[[cov_name]])[1])
+    return(m)
+  },
   get_A  = function(param, obj){
     return(NULL)
   }
 ))
 
+#'
+#' Covariance of an OU processes conditioning on
+#' X(\delta)  = 0 where \delta is a parameter and
+#' X(t) = 0 for t>\delta
+#' @param \delta in [tmin, \inf)
+#' @param \sigma
+#' @param \range
+
+
+OUbridge <- R6::R6Class("OUbridge", list(
+  d = 3,
+  tmin = NULL,
+  tmax = NULL,
+  initialize = function(tmin, tmax) {self$tmin <- tmin
+                                     self$tmax <- tmax},
+  get_name = function(){return('OU bridge')},
+  get_param_length = function(){return(self$d)},
+  get_Cov = function(param, obj, cov_name = 'time') {
+    
+    delta <- self$tmin + exp(param[1])
+    Sigma <- matrix(0, 
+                    nrow = length(obj[[cov_name]]),
+                    ncol = length(obj[[cov_name]]))
+    # time < delta
+    less_delta <- obj[[cov_name]] < delta
+    time <- c(obj[[cov_name]][less_delta], delta)
+    
+    D <- as.matrix(dist(time))
+    n_ <- length(time)
+    Sigma_p <- OUcov(D, param[2:3])
+    # conditional distribution
+    Sigma[less_delta,less_delta] <- Sigma_p[1:(n_-1),1:(n_-1)] -
+                                    Sigma_p[1:(n_-1),n_, drop = FALSE]%*%t(Sigma_p[1:(n_-1),n_, drop = FALSE]/Sigma_p[n_,n_])
+    return(Sigma)
+  },
+  get_AtCA  = function(param, obj, cov_name = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name)
+    return(Sigma)
+  },
+  
+  get_mean = function(param, obj, cov_name = 'time'){
+    #TODO
+    m <- rep(0, length(obj[[cov_name]]))
+    return(m)
+  },
+  get_A  = function(param, obj){
+    return(NULL)
+  }
+))

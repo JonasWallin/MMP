@@ -52,11 +52,13 @@ likAndBeta  <- function(param, Obj){
       sigmaI  <- matrix(0,
                         nrow = Team_i$indv[[ii]]$n,
                         ncol = Team_i$indv[[ii]]$n)
-      for(iii in 1:length(Obj$indvCovs))
+      meanI   <- rep(0,  Team_i$indv[[ii]]$n)
+      for(iii in 1:length(Obj$indvCovs)){
         sigmaI <- sigmaI + Obj$indvCovs[[iii]]$get_AtCA(paramList$indv[[iii]], Team_i$indv[[ii]])
-
+        meanI  <- meanI  + Obj$indvCovs[[iii]]$get_mean(paramList$indv[[iii]], Team_i$indv[[ii]])
+      }
       Sigma_X    <- Sigma_X + Team_i$indv[[ii]]$A%*%sigmaI%*%SparseM::t(Team_i$indv[[ii]]$A)
-
+      y_i        <- y_i - as.vector(Team_i$indv[[ii]]$A%*%meanI)
     }
     #building the blockmatrix
     #Sigma_X    <- .bdiag(Sigma_X)

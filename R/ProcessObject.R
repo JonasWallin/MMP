@@ -14,6 +14,8 @@
 #' WLT       - expontial weighting team effect
 #' WEI       - expontial weighting indivual effect
 #' WET       - expontial weighting team effect
+#' TI        - time indivual effect (covariance model) requires time
+#' time      - (n x 1) time point of observations
 #' WNOISE    - covariates to the measurement error
 #' dataOrder - for filtering
 dataToObject <- function(y,
@@ -26,6 +28,8 @@ dataToObject <- function(y,
                          WLT = TRUE,
                          wEI = NULL,
                          wET = NULL,
+                         TI    = FALSE,
+                         time  = NULL,
                          wNOISE = NULL,
                          dataOrder = NULL){
 
@@ -59,6 +63,10 @@ dataToObject <- function(y,
     d <- ncol(as.matrix(XT))
     TeamObj$teamCovs[[count]] <- XcovSmooth$new(d)
   }
+  
+  ###  
+  # setting up the indiuval random effects
+  ###
   count <- 1
   if(is.null(XI)==F){
     if(WLI){
@@ -70,6 +78,11 @@ dataToObject <- function(y,
   if(is.null(wEI)==F){
     d <- ncol(as.matrix(XI))
     TeamObj$indvCovs[[count]] <- XcovSmooth$new(d)
+    count <- count + 1
+  }
+  if(TI==T){
+    TeamObj$indvCovs[[count]] <- OUbridge$new(min(time), max(time))
+    count <- count + 1
   }
 
   for(i in 1:TeamObj$nTeams){
@@ -96,6 +109,9 @@ dataToObject <- function(y,
 
     TeamObj$teams[[i]]$indv <- list()
     indv_i <-  levels(TeamObj$teams[[i]]$data$indv)
+    ##
+    # setting up indivuals data
+    ##
     for(ii in 1:TeamObj$teams[[i]]$nindv){
       TeamObj$teams[[i]]$indv[[ii]] <- list()
       index <- TeamObj$teams[[i]]$data$indv == indv_i[ii]
@@ -108,13 +124,20 @@ dataToObject <- function(y,
                                                  dims = c(n_obs,
                                                           sum(index)))
       TeamObj$teams[[i]]$indv[[ii]]$data <- list()
+      #is there a random linear effect
       if(is.null(XI)==F){
         XIt <-  as.matrix(XI)[Teams == uTeams[i],, drop = FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$X = as.matrix(XIt)[index,, drop = FALSE]
       }
+      #is there a expontialy weighted effect
       if(is.null(wEI)==F){
         wIt <- as.matrix(wEI)[Teams == uTeams[i],, drop = FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$w =as.matrix(wIt)[index,, drop = FALSE]
+      }
+      #is there is a time series component
+      if(TI){
+        timeTeam <- time[Teams == uTeams[i]]
+        TeamObj$teams[[i]]$indv[[ii]]$time <- timeTeam[index]
       }
     }
   }

@@ -46,6 +46,20 @@ TeamObjv2 <- dataToObject(y = y,
 param <- param0(TeamObjv2)
 res2<-optim(param, function(x){-loglik(x, TeamObjv2) })
 paramList2 <- paramToList(res2$par, TeamObjv2)
+
+
+TeamObjv3 <- dataToObject(y = y,
+                        team = sherifdat$group,
+                        indv = sherifdat$person,
+                        Xf   = rep(1, length(sherifdat$y)),
+                        XT   = rep(1,  length(sherifdat$y)),
+                        TI = T,
+                        time  = sherifdat$time)
+
+param <- param0(TeamObjv3)
+res3<-optim(param, function(x){-loglik(x, TeamObjv3) })
+res3<-optim(res3$par, function(x){-loglik(x, TeamObjv3) })
+paramList3 <- paramToList(res3$par, TeamObjv3)
 Y <- y
 pl <- ggplot(data=sherifdat, aes(x=time,y=Y, colour = person)) + geom_point( size=2) +
   xlab("time") + ylab("inches")
@@ -65,6 +79,7 @@ points(r$time, r_1, col='blue',cex=2,bg='blue', pch=19)
 betas <-getbeta(res$par, TeamObj)
 Smooth <- smoothIndivual(res$par, TeamObj)
 Smooth2 <- smoothIndivual(res2$par, TeamObjv2)
+Smooth3 <- smoothIndivual(res3$par, TeamObjv3)
 
 
 x11()
@@ -72,7 +87,7 @@ par(mfrow=c(2,3))
 time <- c(0,1,2)
 for(j in 1:2){
   for(i in 1:3){
-    plot(time, as.vector(t(TeamObj$teams[[j]]$indv[[i]]$A)%*%TeamObj$teams[[j]]$data$Y), ylab='obs',ylim=c(-1.5,1.5) ,cex=2, pch=19)
+    plot(time, as.vector(Matrix::t(TeamObj$teams[[j]]$indv[[i]]$A)%*%TeamObj$teams[[j]]$data$Y), ylab='obs',ylim=c(-1.5,1.5) ,cex=2, pch=19)
     m <- Smooth$teams[[j]]$indv[[i]]$mean
     s <-  sqrt(Smooth$teams[[j]]$indv[[i]]$var  + exp(paramList$error[[1]]))
     lines(time,m + 2*s, col='blue' )
@@ -81,5 +96,10 @@ for(j in 1:2){
     s <-  sqrt(Smooth2$teams[[j]]$indv[[i]]$var  +  exp(paramList2$error[[1]][1] + paramList2$error[[1]][2]*time))
     lines(time,m + 2*s, col='red' )
     lines(time,m - 2*s, col='red' )
+    
+    m <- Smooth3$teams[[j]]$indv[[i]]$mean
+    s <-  sqrt(Smooth3$teams[[j]]$indv[[i]]$var  +  exp(paramList3$error[[1]][1] ))
+    lines(time,m + 2*s, col='green' )
+    lines(time,m - 2*s, col='green' )
   }
 }
