@@ -8,6 +8,7 @@
 library(MMP)
 library(ggplot2)
 library(dplyr)
+save.fig=T
 data("sherifdat")
 graphics.off()
 
@@ -67,22 +68,51 @@ pl <- pl +  facet_wrap(~group)
 x11()
 print(pl)
 
-x11()
+
+###
+#'
+#' computing r for emperical and the three models
+#'
+###
+if(save.fig){
+  pdf('r_est.pdf')  
+}else{
+  x11()
+}
 r <- r.emperical(sherifdat$y.centered, sherifdat$group, sherifdat$time)
 plot(r$time, r$r, ylim=c(0,1),cex=2, pch=19)
-r_2 <- exp(paramList2$error[[1]][1] + paramList2$error[[1]][2]*r$time) +exp(2* paramList2$indv[[1]])
+#
+time <- seq(min(r$time), max(r$time), length.out = 100)
+r_2 <- exp(paramList2$error[[1]][1] + paramList2$error[[1]][2]*time) +exp(2* paramList2$indv[[1]])
 r_2 <- sqrt(r_2/r_2[1])
-points(r$time, r_2, col='red',cex=2, pch=19)
-r_1 <- exp(-2*paramList$indv[[1]][1]*r$time + 2*paramList$indv[[1]][2]) + exp(paramList$error[[1]])
+lines(time, r_2, col='red')
+r_1 <- exp(-2*paramList$indv[[1]][1]*time + 2*paramList$indv[[1]][2]) + exp(paramList$error[[1]])
 r_1 <- sqrt(r_1/r_1[1])
-points(r$time, r_1, col='blue',cex=2,bg='blue', pch=19)
+lines(time, r_1, col='blue')
+
+
+Cov <- rep(0, length(time))
+for(i in 1:length(time)){
+  indv <- list(time=time[i])
+  Cov[i] <- TeamObjv3$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv) + + exp(paramList$error[[1]])
+}
+r_3 <- sqrt(Cov/Cov[1])
+lines(time, r_3, col='green',cex=2)
+
+if(save.fig)
+dev.off()
+
 betas <-getbeta(res$par, TeamObj)
 Smooth <- smoothIndivual(res$par, TeamObj)
 Smooth2 <- smoothIndivual(res2$par, TeamObjv2)
 Smooth3 <- smoothIndivual(res3$par, TeamObjv3)
 
 
-x11()
+if(save.fig){
+  pdf('smooth.pdf')  
+}else{
+  x11()
+}
 par(mfrow=c(2,3))
 time <- c(0,1,2)
 for(j in 1:2){
@@ -103,3 +133,5 @@ for(j in 1:2){
     lines(time,m - 2*s, col='green' )
   }
 }
+if(save.fig)
+  dev.off()
