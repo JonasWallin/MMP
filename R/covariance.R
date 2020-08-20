@@ -55,37 +55,37 @@ Xcov <- R6::R6Class("Xcov", list(
 #'
 #' A X covaraince with expontial smoothing
 #' The covariance of Y from the model
-#' Y = diag(exp(-delta * d)) %*% X %*% Z where Z ~ N(0,\Sigma)
+#' Y = diag(exp(-W %*% delta)) %*% X %*% Z where Z ~ N(0,\Sigma)
 #'
 #' @param obj - needs to contain X,d which is list of times
 #'
 
 XcovSmooth <- R6::R6Class("XcovSmooth", list(
-  d = NULL,
-  initialize = function(d) {self$d <- d},
+  d   = NULL,
+  d_w = NULL,
+  initialize = function(d, d_w) {self$d <- d;
+                                 self$d_w <- d_w},
   get_name = function(){return('XCovSmooth')},
-  get_param_length = function(){return(self$d*(self$d+1)/2 + 1)},
+  get_param_length = function(){return(self$d*(self$d+1)/2 +  self$d_w)  },
   get_mean = function(param, obj){
     m <- rep(0, self$d)
     return(m)
   },
   get_Cov = function(param,obj) {
 
-    Sigma <- as.matrix(nlme::pdLogChol(param[2:length(param)]))
+    Sigma <- as.matrix(nlme::pdLogChol(param[(self$d_w + 1):length(param)]))
     return(Sigma)
   },
-  get_AtCA  = function(param, obj){
+  get_AtCA  = function(param, obj, cov_name='W'){
     X <- obj$X
-    d <- obj$w
     Sigma <- self$get_Cov(param, obj)
-    A     <- self$get_A(param, obj)
+    A     <- self$get_A(param, obj, cov_name= cov_name)
     return(A%*%Sigma%*%t(A))
   },
 
-  get_A  = function(param, obj){
+  get_A  = function(param, obj, cov_name='W'){
     X <- obj$X
-    d <- obj$w
-    DX <- diag(c(exp(-d*param[1])))%*%X
+    DX <- diag(c(exp(-obj[[cov_name]]*param[1:self$d_w])))%*%X
     return(DX)
   }
 ))
@@ -124,47 +124,49 @@ expWeightDiag <- R6::R6Class("expWeightDiag", list(
 
 #'
 #' Covariance of an OU processes conditioning on
-#' X(\delta)  = 0 where \delta is a parameter and
-#' X(t) = 0 for t>\delta
-#' @param \delta in [tmin, \inf)
+#' X(exp(D%*%\delta))  = 0 where D%*%delta is a parameter and
+#' X(t) = 0 for t>exp(D%*%\delta)
+#' @param \delta 
 #' @param \sigma
 #' @param \range
 
 
 OUbridge <- R6::R6Class("OUbridge", list(
-  d = 3,
+  d = NULL,
   tmin = NULL,
   tmax = NULL,
-  initialize = function(tmin, tmax) {self$tmin <- tmin
-                                     self$tmax <- tmax},
+  initialize = function(tmin, tmax,d_D) {self$tmin <- tmin;
+                                     self$tmax <- tmax;
+                                     self$d<- 2 + d_D },
   get_name = function(){return('OU bridge')},
   get_param_length = function(){return(self$d)},
-  get_Cov = function(param, obj, cov_name = 'time') {
-    
-    delta <- self$tmin + exp(param[1])
+  get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
+
+    delta <- self$tmin + c(exp(obj[[cov_name]]%*%as.vector(param[1:(self$d-2)])))
     Sigma <- matrix(0, 
-                    nrow = length(obj[[cov_name]]),
-                    ncol = length(obj[[cov_name]]))
+                    nrow = length(obj[[time]]),
+                    ncol = length(obj[[time]]))
     # time < delta
-    less_delta <- obj[[cov_name]] < delta
-    time <- c(obj[[cov_name]][less_delta], delta)
     
+    less_delta <- obj[[time]] < delta
+    time <- c(obj[[time]][less_delta], delta)
     D <- as.matrix(dist(time))
     n_ <- length(time)
-    Sigma_p <- OUcov(D, param[2:3])
+   
+    Sigma_p <- OUcov(D, param[(self$d-1):self$d])
     # conditional distribution
     Sigma[less_delta,less_delta] <- Sigma_p[1:(n_-1),1:(n_-1)] -
                                     Sigma_p[1:(n_-1),n_, drop = FALSE]%*%t(Sigma_p[1:(n_-1),n_, drop = FALSE]/Sigma_p[n_,n_])
     return(Sigma)
   },
-  get_AtCA  = function(param, obj, cov_name = 'time'){
-    Sigma <- self$get_Cov(param, obj, cov_name)
+  get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
     return(Sigma)
   },
   
-  get_mean = function(param, obj, cov_name = 'time'){
+  get_mean = function(param, obj, time = 'time'){
     #TODO
-    m <- rep(0, length(obj[[cov_name]]))
+    m <- rep(0, length(obj[[time]]))
     return(m)
   },
   get_A  = function(param, obj){

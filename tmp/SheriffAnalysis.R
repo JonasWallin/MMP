@@ -31,7 +31,7 @@ TeamObj <- dataToObject(y = y,
                         XI   = rep(1, length(sherifdat$y)),
                         XT   = rep(1,  length(sherifdat$y)),
                         WLI = F,
-                        wEI  = sherifdat$time)
+                        WEI  = as.matrix(sherifdat$time))
 param <- param0(TeamObj)
 
 res<-optim(param, function(x){-loglik(x, TeamObj) })
@@ -67,7 +67,7 @@ TeamObjv3 <- dataToObject(y = y,
                         indv = sherifdat$person,
                         Xf   = rep(1, length(sherifdat$y)),
                         XT   = rep(1,  length(sherifdat$y)),
-                        TI = T,
+                        TI =  as.matrix(rep(1, length(sherifdat$y))),
                         time  = sherifdat$time)
 
 param <- param0(TeamObjv3)
@@ -106,8 +106,8 @@ lines(time, r_1, col='blue')
 
 Cov <- rep(0, length(time))
 for(i in 1:length(time)){
-  indv <- list(time=time[i])
-  Cov[i] <- TeamObjv3$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv) + + exp(paramList$error[[1]])
+  indv <- list(D=as.matrix(1),time=time[i])
+  Cov[i] <- TeamObjv3$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv)  + exp(paramList$error[[1]])
 }
 r_3 <- sqrt(Cov/Cov[1])
 lines(time, r_3, col='green',cex=2)
