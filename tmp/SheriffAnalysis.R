@@ -37,6 +37,14 @@ param <- param0(TeamObj)
 res<-optim(param, function(x){-loglik(x, TeamObj) })
 paramList <- paramToList(res$par, TeamObj)
 
+
+##
+# Setting up the model 2
+# T ~ N(\mu0, \sigma_T)
+# I ~ N(T,\sigma_I)
+# y ~ N(I,  \exp(-delta * time)*\sigma_y)
+##
+
 TeamObjv2 <- dataToObject(y = y,
                         team = sherifdat$group,
                         indv = sherifdat$person,
@@ -48,7 +56,12 @@ param <- param0(TeamObjv2)
 res2<-optim(param, function(x){-loglik(x, TeamObjv2) })
 paramList2 <- paramToList(res2$par, TeamObjv2)
 
-
+##
+# Setting up the model 3
+# T ~ N(\mu0, \sigma_T)
+# I ~ T + GP(\theta)
+# y ~ N(I, \sigma_y)
+##
 TeamObjv3 <- dataToObject(y = y,
                         team = sherifdat$group,
                         indv = sherifdat$person,
