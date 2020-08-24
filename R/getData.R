@@ -1,4 +1,35 @@
-getData <- function(formula1, formula2, formula3, data) {
+
+
+
+
+#' Title
+#'
+#' @param formula1 y ~ fixed
+#' @param formula2 ~ indv.random | indv
+#' @param formula3 ~ team.random | team
+#' @param emergence ~ TIME + additional 
+#' @param model "CEM" Lang et al. model, "CEI" our altered model, "GP"
+#' @param data 
+#'
+#' @return 
+#' team      - (n x 1) list of team y belongs to
+#' indv      - (n x 1) list of indv y belongs to
+#' Xf        - fixed effects
+#' XI        - indivual effects (random)
+#' XT        - team effects (random)
+#' WEI       - expontial weighting indivual effect
+#' WNOISE    - covariates to the measurement error
+
+#' @export
+#'
+#' @examples
+#' 
+getData <- function(formula1, 
+                    formula2, 
+                    formula3, 
+                    emergence, 
+                    model, 
+                    data) {
   
   ### Xf and y
   
@@ -135,9 +166,75 @@ getData <- function(formula1, formula2, formula3, data) {
   colnames(team) <- groupvar3
   
   
+  ### consensus model
+  # possible values of model: "CEM", "CEI", "GP"
+  ceFormula <- emergence
   
-  matrices <- list(y, Xf, XI, indv, XT, team)
-  names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team")
+  # extract info from formula
+  ceTerms <- terms(ceFormula)
+  ceTerms_names <- attr(ceTerms,"term.labels")
+  
+  
+  ceVars <- as.character(attr(ceTerms,"variables")) # all variables in model in order they appear in formula
+  ceVars <- ceVars[-1] 
+  
+  # model frame
+  ceMf <- as.data.frame(data[,ceVars])
+  
+  
+  # create wNOISE/WEI/(GP, TODO)
+  
+  
+  if (ncol(ceMf) == 1) {
+    
+    if (model == "CEM") {
+      
+      wNOISE <- ceMf
+      colnames(wNOISE) <- ceTerms_names
+      
+      matrices <- list(y, Xf, XI, indv, XT, team, wNOISE)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "wNOISE")
+      
+    } else if (model == "CEI") {
+      
+      WEI <- ceMf
+      colnames(WEI) <- ceTerms_names
+      
+      matrices <- list(y, Xf, XI, indv, XT, team, WEI)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "WEI")
+      
+   # } else if (model == "GP") {
+      # TODO
+    } else {
+      matrices <- list(y, Xf, XI, indv, XT, team)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team")
+    }
+  } else {
+    
+    if (model == "CEM") {
+      
+      wNOISE <- ceMf[,ceTerms_names]
+      colnames(wNOISE) <- ceTerms_names
+      
+      matrices <- list(y, Xf, XI, indv, XT, team, wNOISE)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "wNOISE")
+      
+    } else if (model == "CEI") {
+      
+      WEI <- ceMf[,ceTerms_names]
+      colnames(WEI) <- ceTerms_names
+      
+      matrices <- list(y, Xf, XI, indv, XT, team, WEI)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "WEI")
+      
+   # } else if (model == "GP"){
+      # TODO
+    } else {
+      matrices <- list(y, Xf, XI, indv, XT, team)
+      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team")
+    }
+  }
+  
   
   return(matrices)
   
