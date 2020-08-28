@@ -1,20 +1,20 @@
 
 
 #'
-#' creates optimization object, need to be orderd within team, indv
+#' creates optimization object, need to be ordered within team, indv
 #'
 #'
 #'
-#' team      - (n x 1) list of team y belongs to
-#' indv      - (n x 1) list of indv y belongs to
+#' team      - (n x 1) vector of team y belongs to
+#' indv      - (n x 1) vector of indv y belongs to
 #' Xf        - fixed effects
-#' XI        - indivual effects (random)
+#' XI        - individual effects (random)
 #' XT        - team effects (random)
-#' WLI       - Linear weighting indivual effect
-#' WLT       - expontial weighting team effect
-#' WEI       - expontial weighting indivual effect
-#' WET       - expontial weighting team effect
-#' TI        -  n_indv x p (time indivual effect (covariance model) requires time)
+#' WLI       - Linear weighting individual effect
+#' WLT       - linear weighting team effect
+#' WEI       - exponential weighting individual effect
+#' WET       - exponential weighting team effect
+#' TI        -  n_indv x p (time individual effect (covariance model) requires time)
 #' time      - (n x 1) time point of observations
 #' WNOISE    - covariates to the measurement error
 #' dataOrder - for filtering
