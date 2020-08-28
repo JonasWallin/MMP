@@ -7,8 +7,9 @@
 #' @param formula1 y ~ fixed
 #' @param formula2 ~ indv.random | indv
 #' @param formula3 ~ team.random | team
-#' @param emergence ~ TIME + additional 
-#' @param model "CEM" Lang et al. model, "CEI" our altered model, "GP"
+#' @param emergence ~ TIME + additional for methods CEM and CEI, ~ covariates (without time) for GP
+#' @param method "CEM" Lang et al. model, "CEI" our altered model, "GP" Gaussian Process
+#' @param time name of time variable in quote, "TIME"
 #' @param data 
 #'
 #' @return 
@@ -28,7 +29,8 @@ getData <- function(formula1,
                     formula2, 
                     formula3, 
                     emergence, 
-                    model, 
+                    method,
+                    time = NULL,
                     data) {
   
   ### Xf and y
@@ -45,12 +47,14 @@ getData <- function(formula1,
   response <- vars1[1]
   
   # model frame
-  #mf <- model.frame(level1, data) # removes NA's
+  #mf1 <- model.frame(level1, data, na.action = na.pass) 
   mf1 <- data[,vars1]
   
   # create Xf and y
   Xf <- as.data.frame(mf1[,term1_names])
   colnames(Xf) <- term1_names
+  
+  ## TODO: testa om full rank
   
   y <- as.data.frame(mf1[,response]) 
   colnames(y) <- response
@@ -87,8 +91,8 @@ getData <- function(formula1,
   
   
   # model frame
-  #mf <- model.frame(level2, univbct) # removes NA's
-  mf2 <- as.data.frame(data[,vars2])
+  #mf2 <- model.frame(level2, data, na.action = na.pass) 
+   mf2 <- as.data.frame(data[,vars2])
   
   # create XI
   if (ncol(mf2) == 1) {
@@ -136,7 +140,7 @@ getData <- function(formula1,
   
   
   # model frame
-  #mf <- model.frame(level3, univbct) # removes NA's
+  #mf3 <- model.frame(level3, data, na.action = na.pass) 
   mf3 <- as.data.frame(data[,vars3])
   
   # create XT
@@ -151,7 +155,7 @@ getData <- function(formula1,
   # add intercept to XT
   
   if (attr(terms3,"intercept") == 1) {
-    intercept <- rep(1, n) # will this be a problem if all intercepts are called "intercept"?
+    intercept <- rep(1, n) 
     XT <- data.frame(intercept,XT)
   }
   
@@ -166,8 +170,8 @@ getData <- function(formula1,
   colnames(team) <- groupvar3
   
   
-  ### consensus model
-  # possible values of model: "CEM", "CEI", "GP"
+  ### consensus method
+  # possible values of method: "CEM", "CEI", "GP"
   ceFormula <- emergence
   
   # extract info from formula
@@ -179,62 +183,113 @@ getData <- function(formula1,
   ceVars <- ceVars[-1] 
   
   # model frame
+  #ceMf <- model.frame(ceFormula, data, na.action = na.pass)
   ceMf <- as.data.frame(data[,ceVars])
   
   
-  # create wNOISE/WEI/(GP, TODO)
+  # create wNOISE/WEI/TI/(WET, TODO)
+  
+  ## initiate all extra wanted matrices
+  WEI <- NULL
+  WET <- NULL 
+  TI <- NULL
+  wNOISE <- NULL
   
   
   if (ncol(ceMf) == 1) {
     
-    if (model == "CEM") {
+    if (method == "CEM") {
       
       wNOISE <- ceMf
       colnames(wNOISE) <- ceTerms_names
       
-      matrices <- list(y, Xf, XI, indv, XT, team, wNOISE)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "wNOISE")
       
-    } else if (model == "CEI") {
+    } else if (method == "CEI") {
       
       WEI <- ceMf
       colnames(WEI) <- ceTerms_names
       
-      matrices <- list(y, Xf, XI, indv, XT, team, WEI)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "WEI")
+    } else if (method == "GP") {
       
-   # } else if (model == "GP") {
-      # TODO
+      TI <- ceMf
+      colnames(TI) <- ceTerms_names
+      
     } else {
-      matrices <- list(y, Xf, XI, indv, XT, team)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team")
+      
     }
   } else {
     
-    if (model == "CEM") {
+    if (method == "CEM") {
       
       wNOISE <- ceMf[,ceTerms_names]
       colnames(wNOISE) <- ceTerms_names
+ 
       
-      matrices <- list(y, Xf, XI, indv, XT, team, wNOISE)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "wNOISE")
-      
-    } else if (model == "CEI") {
+    } else if (method == "CEI") {
       
       WEI <- ceMf[,ceTerms_names]
       colnames(WEI) <- ceTerms_names
       
-      matrices <- list(y, Xf, XI, indv, XT, team, WEI)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team", "WEI")
       
-   # } else if (model == "GP"){
-      # TODO
+      
+    } else if (method == "GP"){
+      TI <- ceMf[,ceTerms_names]
+      colnames(TI) <- ceTerms_names
+      
+      
     } else {
-      matrices <- list(y, Xf, XI, indv, XT, team)
-      names(matrices) <- c("y", "Xf", "XI", "indv", "XT", "team")
+ 
     }
   }
   
+  # create time
+  if (method == "GP" && is.null(time) == TRUE) {
+    
+    warning("Time variable not specified")
+    
+  } else if (method == "GP" && exists(time,TI) == TRUE) {
+    
+    # TODO: find a way to do this without specifying the name as
+    #       a character in argument
+    
+    warning("Emergence variables cannot include time when method = GP")
+  
+  }
+    else if (method == "GP") {
+    timeName <- time
+    time <- data[,timeName]
+    
+    # TODO: add name to time variable? 
+    
+    
+  } else {
+    time <- NULL 
+  }
+  
+  
+  matrices <- list(y, 
+                   Xf, 
+                   XI, 
+                   indv, 
+                   XT, 
+                   team, 
+                   WEI, 
+                   WET, 
+                   TI, 
+                   time, 
+                   wNOISE)
+  
+  names(matrices) <- c("y", 
+                       "Xf", 
+                       "XI", 
+                       "indv", 
+                       "XT", 
+                       "team", 
+                       "WEI", 
+                       "WET", 
+                       "TI", 
+                       "time", 
+                       "wNOISE")
   
   return(matrices)
   
