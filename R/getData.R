@@ -48,26 +48,46 @@ getData <- function(formula1,
   
   # model frame
   #mf1 <- model.frame(level1, data, na.action = na.pass) 
-  mf1 <- data[,vars1]
+  mf1 <- as.data.frame(data[,vars1])
   
   # create Xf and y
-  Xf <- as.data.frame(mf1[,term1_names])
-  colnames(Xf) <- term1_names
+
+  if (ncol(mf1) == 1) { 
+     
+     y <- as.data.frame(mf1)
+     colnames(y) <- response
+     
+     # add intercept to Xf
+     
+     n <- nrow(mf1)
+     
+     if (attr(terms1,"intercept") == 1) {
+       intercept <- rep(1, n)
+       Xf <- as.data.frame(intercept)
+     }
+     
+  } else {
+    Xf <- as.data.frame(mf1[,term1_names])
+    colnames(Xf) <- term1_names
+    
+    y <- as.data.frame(mf1[,response]) 
+    colnames(y) <- response
+    
+    # add intercept to Xf
+    
+    n <- nrow(mf1)
+    
+    if (attr(terms1,"intercept") == 1) {
+      intercept <- rep(1, n)
+      Xf <- data.frame(intercept,Xf)
+    }
+  }
+  
+
   
   ## TODO: testa om full rank
   
-  y <- as.data.frame(mf1[,response]) 
-  colnames(y) <- response
-  
-  
-  # add intercept to Xf
-  
-  n <- nrow(mf1)
-  
-  if (attr(terms1,"intercept") == 1) {
-    intercept <- rep(1, n)
-    Xf <- data.frame(intercept,Xf)
-  }
+   
   
   
   ### XI and indv
