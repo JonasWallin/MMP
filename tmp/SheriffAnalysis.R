@@ -27,7 +27,7 @@ if(centered){
 TeamObj <- dataToObject(y = y,
                         team = sherifdat$group,
                         indv = sherifdat$person,
-                        Xf   = rep(1, length(sherifdat$y)),
+                        Xf   = cbind(rep(1, length(sherifdat$y)),sherifdat$time),
                         XI   = rep(1, length(sherifdat$y)),
                         XT   = rep(1,  length(sherifdat$y)),
                         WLI = F,
@@ -35,6 +35,8 @@ TeamObj <- dataToObject(y = y,
 param <- param0(TeamObj)
 
 res<-optim(param, function(x){-loglik(x, TeamObj) })
+COVARIANCE_BETA <- getCovbeta(res$par, TeamObj)
+
 paramList <- paramToList(res$par, TeamObj)
 
 
