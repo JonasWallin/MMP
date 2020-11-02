@@ -18,8 +18,20 @@ getbeta <- function(param, Obj){
   return(likAndBeta(param, Obj)$beta)
 }
 
+#'
+#' Get the covariance matrix of fixed effect for the model
+#' hold variance parameters fixed
+#'
+getCovbeta <- function(param, Obj){
+  return(solve(likAndBeta(param, Obj)$Hbeta))
+}
 
-likAndBeta  <- function(param, Obj){
+#'
+#' Computes the log-likelihood (or Restricted)
+#' for variance compoents and also the ML-estimated fixed effect
+#' and resulting Hessian
+#' 
+likAndBeta  <- function(param, Obj, REML=FALSE){
 
   paramList <- paramToList(param, Obj)
   lik <- 0
@@ -32,10 +44,12 @@ likAndBeta  <- function(param, Obj){
     ySigmainvX <- rep(0, dim(Obj$X)[2])
 
   }
-
+  if(is.null(Obj$X) ==F)
+    XtSigmainvX <- matrix(0, nrow= dim(Obj$X)[2],ncol= dim(Obj$X)[2])
+  
   for(i in 1:length(Obj$teams)){
     Team_i <- Obj$teams[[i]]
-    y_i    <- Obj$teams[[i]]$data$Y
+    y_i    <- as.matrix(Obj$teams[[i]]$data$Y)
     if(is.null(Obj$X) ==F)
       X_i    <- Obj$teams[[i]]$data$X
     n_i    <- length(y_i)
@@ -87,7 +101,6 @@ likAndBeta  <- function(param, Obj){
     # add beta component!!!
     # and REML
     #SigmaInvX = solve(Sigma_X, X)
-
     if(is.null(Obj$X) ==F){
       SigmainvX   <- forwardsolve(L, backsolve(L, X_i, transpose = TRUE), upper.tri = TRUE)
       XtSigmainvX <- XtSigmainvX + t(X_i)%*%SigmainvX
@@ -98,12 +111,23 @@ likAndBeta  <- function(param, Obj){
   }
 
   beta = c()
+  
   #-0.5 * beta_hat^T \sigma_hat^-1 beta_hat + \sum_i y_i \sigma_hat^-1 beta_hat
+  # = -0.5 (D%*%C)^T D^{-1} D%*%C + C^T * D^{-1} (D%*%C)
+  # 
   if(is.null(Obj$X) ==F){
-    beta = solve(XtSigmainvX, ySigmainvX)
-    lik <- lik + 0.5 * t(ySigmainvX)%*%beta
+    beta = solve(XtSigmainvX, t(ySigmainvX))
+    lik <- lik + 0.5 * ySigmainvX%*%beta
+    
+    #use restitriced maximum likelihood
+    if(REML==T){
+      L <- chol(XtSigmainvX)
+      # determinant of covariance matrix
+      lik <- lik + sum(log(diag(L)))
+      
+    }
   }
-  return(list(lik = lik, beta=beta))
+  return(list(lik = lik, beta=beta, Hbeta = XtSigmainvX))
 }
 #gives the smoothing distribution of the indivual
 # in form of mean and covariance
