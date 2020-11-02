@@ -39,60 +39,25 @@ getData <- function(formula1,
   
   # extract info from formula
   terms1 <- terms(level1)
-  term1_names <- attr(terms1,"term.labels")
-  
   
   vars1 <- as.character(attr(terms1,"variables")) # all variables in model in order they appear in formula
   vars1 <- vars1[-1] # remove "list" thing
   response <- vars1[1]
   
   # model frame
-  #mf1 <- model.frame(level1, data, na.action = na.pass) 
-  mf1 <- as.data.frame(data[,vars1])
+  mf1 <- model.frame(level1, data, na.action = na.pass) 
   
-  # create Xf and y
-
-  if (ncol(mf1) == 1) { 
-     
-     y <- as.data.frame(mf1)
-     colnames(y) <- response
-     
-     # add intercept to Xf
-     
-     n <- nrow(mf1)
-     
-     if (attr(terms1,"intercept") == 1) {
-       intercept <- rep(1, n)
-       Xf <- as.data.frame(intercept)
-     }
-     
-  } else {
-    Xf <- as.data.frame(mf1[,term1_names])
-    colnames(Xf) <- term1_names
-    
-    y <- as.data.frame(mf1[,response]) 
-    colnames(y) <- response
-    
-    # add intercept to Xf
-    
-    n <- nrow(mf1)
-    
-    if (attr(terms1,"intercept") == 1) {
-      intercept <- rep(1, n)
-      Xf <- data.frame(intercept,Xf)
-    }
-  }
+  y <- as.data.frame(model.extract(mf1, "response"))
+  colnames(y) <- response
   
-
+  Xf <- as.data.frame(model.matrix(level1, data=mf1))
   
   ## TODO: testa om full rank
   
-   
+  
   
   
   ### XI and indv
-  
-  
   
   l2 <- formula2
   l2_ch <- deparse1(l2) # converts it to string so the bar can be removed
@@ -100,36 +65,11 @@ getData <- function(formula1,
   l2_list <- unlist(strsplit(l2_ch, "\\|")) # remove vertical bar, creates a list. unlist
   level2 <- as.formula(l2_list[1])
   
-  
-  # extract info from formula
-  terms2 <- terms(level2)
-  term2_names <- attr(terms2,"term.labels")
-  
-  
-  vars2 <- as.character(attr(terms2,"variables")) # all variables in model in order they appear in formula
-  vars2 <- vars2[-1] # remove "list" thing
-  
-  
   # model frame
-  #mf2 <- model.frame(level2, data, na.action = na.pass) 
-   mf2 <- as.data.frame(data[,vars2])
+  mf2 <- model.frame(level2, data, na.action = na.pass) 
   
-  # create XI
-  if (ncol(mf2) == 1) {
-    XI <- mf2
-  } else {
-    XI <- mf2[,term2_names]
-  }
-  
-  colnames(XI) <- term2_names 
-  
-  # add intercept to XI
-  
-  if (attr(terms2,"intercept") == 1) {
-    intercept <- rep(1, n) # will this be a problem if all intercepts are called "intercept"?
-    XI <- data.frame(intercept,XI)
-  }
-  
+  # XI
+  XI <- as.data.frame(model.matrix(level2, data=mf2))
   
   ## create indv (does it need to be unique within teams or overall?)
   groupvar2 <- l2_list[2]
@@ -150,34 +90,11 @@ getData <- function(formula1,
   level3 <- as.formula(l3_list[1])
   
   
-  # extract info from formula
-  terms3 <- terms(level3)
-  term3_names <- attr(terms3,"term.labels")
-  
-  
-  vars3 <- as.character(attr(terms3,"variables")) # all variables in model in order they appear in formula
-  vars3 <- vars3[-1] # remove "list" thing
-  
-  
   # model frame
-  #mf3 <- model.frame(level3, data, na.action = na.pass) 
-  mf3 <- as.data.frame(data[,vars3])
+  mf3 <- model.frame(level3, data, na.action = na.pass) 
   
-  # create XT
-  if (ncol(mf3) == 1) {
-    XT <- mf3
-  } else {
-    XT <- mf3[,term3_names]
-  }
-  
-  colnames(XT) <- term3_names 
-  
-  # add intercept to XT
-  
-  if (attr(terms3,"intercept") == 1) {
-    intercept <- rep(1, n) 
-    XT <- data.frame(intercept,XT)
-  }
+  # XT
+  XT <- as.data.frame(model.matrix(level3, data=mf3))
   
   
   ## create team 
@@ -194,18 +111,11 @@ getData <- function(formula1,
   # possible values of method: "CEM", "CEI", "GP"
   ceFormula <- emergence
   
-  # extract info from formula
-  ceTerms <- terms(ceFormula)
-  ceTerms_names <- attr(ceTerms,"term.labels")
   
+  # model/data frame
+  ceMf <- model.frame(ceFormula, data, na.action = na.pass) 
   
-  ceVars <- as.character(attr(ceTerms,"variables")) # all variables in model in order they appear in formula
-  ceVars <- ceVars[-1] 
-  
-  # model frame
-  #ceMf <- model.frame(ceFormula, data, na.action = na.pass)
-  ceMf <- as.data.frame(data[,ceVars])
-  
+  ceMf <- as.data.frame(model.matrix(ceFormula, data=ceMf))
   
   # create wNOISE/WEI/TI/(WET, TODO)
   
@@ -216,50 +126,20 @@ getData <- function(formula1,
   wNOISE <- NULL
   
   
-  if (ncol(ceMf) == 1) {
+  if (method == "CEM") {
     
-    if (method == "CEM") {
-      
-      wNOISE <- ceMf
-      colnames(wNOISE) <- ceTerms_names
-      
-      
-    } else if (method == "CEI") {
-      
-      WEI <- ceMf
-      colnames(WEI) <- ceTerms_names
-      
-    } else if (method == "GP") {
-      
-      TI <- ceMf
-      colnames(TI) <- ceTerms_names
-      
-    } else {
-      
-    }
+    wNOISE <- ceMf
+    
+  } else if (method == "CEI") {
+    
+    WEI <- ceMf
+    
+  } else if (method == "GP") {
+    
+    TI <- ceMf
+    
   } else {
     
-    if (method == "CEM") {
-      
-      wNOISE <- ceMf[,ceTerms_names]
-      colnames(wNOISE) <- ceTerms_names
- 
-      
-    } else if (method == "CEI") {
-      
-      WEI <- ceMf[,ceTerms_names]
-      colnames(WEI) <- ceTerms_names
-      
-      
-      
-    } else if (method == "GP"){
-      TI <- ceMf[,ceTerms_names]
-      colnames(TI) <- ceTerms_names
-      
-      
-    } else {
- 
-    }
   }
   
   # create time
@@ -273,9 +153,9 @@ getData <- function(formula1,
     #       a character in argument
     
     warning("Emergence variables cannot include time when method = GP")
-  
+    
   }
-    else if (method == "GP") {
+  else if (method == "GP") {
     timeName <- time
     time <- data[,timeName]
     

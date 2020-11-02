@@ -16,8 +16,8 @@ data <- getData(y ~ time,
 data <- getData(y ~ time, 
                 ~ 1 | person, 
                 ~ 1 | group, 
-                emergence = ~ time * condition, 
+                emergence = ~ -1 + time * condition, 
                 method = "CEM", 
                 data = sherifdat)
 
-### does not work, need to look at how to handle interaction effects
+### works! --- maybe not?
