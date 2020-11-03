@@ -10,7 +10,7 @@
 #' Xf        - fixed effects
 #' XI        - individual effects (random)
 #' XT        - team effects (random)
-#' WLI       - Linear weighting individual effect
+#' WLI       - linear weighting individual effect
 #' WLT       - linear weighting team effect
 #' WEI       - exponential weighting individual effect
 #' WET       - exponential weighting team effect
@@ -18,20 +18,53 @@
 #' time      - (n x 1) time point of observations
 #' WNOISE    - covariates to the measurement error
 #' dataOrder - for filtering
-dataToObject <- function(y,
-                         team,
-                         indv,
-                         Xf = NULL,
-                         XI = NULL,
-                         XT = NULL,
-                         WLI = TRUE,
-                         WLT = TRUE,
-                         WEI = NULL,
-                         WET = NULL,
-                         TI    = NULL,
-                         time  = NULL,
-                         wNOISE = NULL,
-                         dataOrder = NULL){
+
+
+dataToObject <- function(data_list){
+  
+  # data_list - output list from function getData()
+  data <- data_list
+  
+  y <- as.matrix(data[["y"]])
+  team <- as.matrix(data[["team"]])
+  indv <- as.matrix(data[["indv"]])
+  Xf <- as.matrix(data[["Xf"]])
+  XI <- as.matrix(data[["XI"]])
+  XT <- as.matrix(data[["XT"]])
+  WLI <- F ## what should this be?  = F for CEI and GP, and = T for CEM?
+  WLT <- T  
+  
+  if (is.null(data[["WEI"]]) == F) {
+    WEI <- as.matrix(data[["WEI"]])
+  } else {
+    WEI <- data[["WEI"]]
+  }
+  
+  if (is.null(data[["WET"]]) == F) {
+  WET <- as.matrix(data[["WET"]])
+  } else {
+    WET <- data[["WET"]]
+  }
+  
+  if (is.null(data[["TI"]]) == F) {
+  TI <- as.matrix(data[["TI"]])
+  } else {
+    TI <- data[["TI"]]
+  }
+  
+  if (is.null(data[["time"]]) == F) {
+  time <- as.matrix(data[["time"]])
+  } else {
+    time <- data[["time"]]
+  }
+  
+  if (is.null(data[["wNOISE"]]) == F) {
+  wNOISE <- as.matrix(data[["wNOISE"]])
+  } else {
+    wNOISE <- (data[["wNOISE"]])
+  }
+  
+  dataOrder <- NULL
 
   TeamObj <- list()
   Teams <- factor(team)
@@ -58,10 +91,11 @@ dataToObject <- function(y,
       TeamObj$teamCovs[[count]] <- Xcov$new(d)
       count <- count + 1
     }
-  }
-  if(is.null(WET)==F){
-    d <- ncol(as.matrix(XT))
-    TeamObj$teamCovs[[count]] <- XcovSmooth$new(d, dim(WET)[2])
+  
+    if(is.null(WET)==F){
+      d <- ncol(as.matrix(XT))
+      TeamObj$teamCovs[[count]] <- XcovSmooth$new(d, dim(WET)[2])
+    }
   }
   
   ###  
