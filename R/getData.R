@@ -44,6 +44,14 @@ getData <- function(formula1,
   vars1 <- vars1[-1] # remove "list" thing
   response <- vars1[1]
   
+  # names
+  f1_names <- attr(terms1,"term.labels")
+  f1_int <- attr(terms1,"intercept")
+  
+  if (f1_int == 1) {
+    f1_names <- c("(Intercept)", f1_names)
+  } 
+  
   # model frame
   mf1 <- model.frame(level1, data, na.action = na.pass) 
   
@@ -64,6 +72,16 @@ getData <- function(formula1,
   
   l2_list <- unlist(strsplit(l2_ch, "\\|")) # remove vertical bar, creates a list. unlist
   level2 <- as.formula(l2_list[1])
+  
+  # names
+  terms2 <- terms(level2)
+  f2_names <- attr(terms2,"term.labels")
+  f2_int <- attr(terms2,"intercept")
+  
+  if (f2_int == 1) {
+    f2_names <- c("(Intercept)", f2_names)
+  }
+ 
   
   # model frame
   mf2 <- model.frame(level2, data, na.action = na.pass) 
@@ -89,6 +107,15 @@ getData <- function(formula1,
   l3_list <- unlist(strsplit(l3_ch, "\\|")) # remove vertical bar, creates a list. unlist
   level3 <- as.formula(l3_list[1])
   
+  # names
+  terms3 <- terms(level3)
+  f3_names <- attr(terms3,"term.labels")
+  f3_int <- attr(terms3,"intercept")
+  
+  if (f3_int == 1) {
+    f3_names <- c("(Intercept)", f3_names)
+  } 
+ 
   
   # model frame
   mf3 <- model.frame(level3, data, na.action = na.pass) 
@@ -116,6 +143,15 @@ getData <- function(formula1,
   ceMf <- model.frame(ceFormula, data, na.action = na.pass) 
   
   ceMf <- as.data.frame(model.matrix(ceFormula, data=ceMf))
+  
+  # names
+  termsE <- terms(ceFormula)
+  e_names <- attr(termsE,"term.labels")
+  e_int <- attr(termsE,"intercept")
+  
+  if (e_int == 1) {
+    e_names <- c("(intercept?)", e_names)
+  }
   
   # create wNOISE/WEI/TI/(WET, TODO)
   
@@ -166,6 +202,11 @@ getData <- function(formula1,
     time <- NULL 
   }
   
+  names <- list(f1_names, f2_names, f3_names, e_names)
+  names(names) <- c("Fixed effects",
+                    "Individual random effects", 
+                    "Team random effects", 
+                    "Emergence")
   
   matrices <- list(y, 
                    Xf, 
@@ -177,7 +218,9 @@ getData <- function(formula1,
                    WET, 
                    TI, 
                    time, 
-                   wNOISE)
+                   wNOISE,
+                   names,
+                   method)
   
   names(matrices) <- c("y", 
                        "Xf", 
@@ -189,7 +232,9 @@ getData <- function(formula1,
                        "WET", 
                        "TI", 
                        "time", 
-                       "wNOISE")
+                       "wNOISE",
+                       "names",
+                       "method")
   
   return(matrices)
   

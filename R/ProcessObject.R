@@ -31,7 +31,15 @@ dataToObject <- function(data_list){
   Xf <- as.matrix(data[["Xf"]])
   XI <- as.matrix(data[["XI"]])
   XT <- as.matrix(data[["XT"]])
-  WLI <- F ## what should this be?  = F for CEI and GP, and = T for CEM?
+  
+  method <- as.character(data[["method"]])
+  
+  if (method == "CEM") {
+    WLI <- T
+  } else {
+    WLI <- F
+  }
+  
   WLT <- T  
   
   if (is.null(data[["WEI"]]) == F) {
