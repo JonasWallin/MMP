@@ -65,6 +65,8 @@ summary.ce <- function(object) {
     
     # individual (exclude for now, does not work to have covariates here)
     
+    ire <- "no covariates"
+    ire_mat <- NULL
     #ire <- as.character(object$model$`Individual random effects`[1]) # formula
     #ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
     
@@ -84,7 +86,6 @@ summary.ce <- function(object) {
     
     
     # emergence (on individual level for CEI)
-    em <- as.character(object$model[4])
     
     em <- as.character(object$model$`Emergence model`[1]) # formula
     em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
@@ -95,7 +96,7 @@ summary.ce <- function(object) {
     delta_param <- em_param[-1]/2
     
     em_mat <- matrix(c(sigma2, delta_param), 
-                     dimnames = list(c("sigma^2",em_names[-1]),"Estimate"))
+                     dimnames = list(c("sigma^2", em_names),"Estimate"))
   }
   
   else if (model == "GP") { # not sure what we want to show for this one
