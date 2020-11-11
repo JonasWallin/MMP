@@ -14,3 +14,5 @@ Imports:
   dplyr,
   Matrix
 LinkingTo: Rcpp, RcppEigen
+Depends: 
+    R (>= 2.10)
