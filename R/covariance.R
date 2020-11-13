@@ -55,7 +55,7 @@ Xcov <- R6::R6Class("Xcov", list(
 #'
 #' A X covaraince with expontial smoothing
 #' The covariance of Y from the model
-#' Y = diag(exp(-W %*% delta)) %*% X %*% Z where Z ~ N(0,\Sigma)
+#' Y = diag(exp(W %*% delta)) %*% X %*% Z where Z ~ N(0,\Sigma)
 #'
 #' @param obj - needs to contain X,d which is list of times
 #'
@@ -85,7 +85,7 @@ XcovSmooth <- R6::R6Class("XcovSmooth", list(
 
   get_A  = function(param, obj, cov_name='W'){
     X <- obj$X
-    DX <- diag(c(exp(-obj[[cov_name]]*param[1:self$d_w])))%*%X
+    DX <- diag(c(exp(obj[[cov_name]]%*%param[1:self$d_w])))%*%X
     return(DX)
   }
 ))
