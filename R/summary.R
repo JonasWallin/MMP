@@ -63,17 +63,17 @@ summary.ce <- function(object) {
     
     ## random effects
     
-    # individual (exclude for now, does not work to have covariates here)
+    # individual
     
-    ire <- "no covariates"
-    ire_mat <- NULL
-    #ire <- as.character(object$model$`Individual random effects`[1]) # formula
-    #ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
+    ire <- as.character(object$model$`Individual random effects`[1]) # formula
+    ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
     
+    ire_param <- unlist(object$covariances$indv)[1:length(ire_names)]
+    ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
+    dimnames(ire_mat) <- list(ire_names,ire_names)
     
-    #ire_param <- unlist(object$covariances$indv)
-    #ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
-    #dimnames(ire_mat) <- list(ire_names,ire_names)
+    # sigma_u 
+    
     
     # team
     
@@ -87,16 +87,29 @@ summary.ce <- function(object) {
     
     # emergence (on individual level for CEI)
     
+    
     em <- as.character(object$model$`Emergence model`[1]) # formula
     em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
     
-    em_param <- unlist(object$covariances$indv)
+    em_param <- unlist(object$covariances$indv)[length(ire_names)+1:length(em_names)]
     
-    sigma2 <- exp(em_param[1])
-    delta_param <- em_param[-1]/2
+    if (em_names[1]=="(Intercept)"){
+      indv_baseline <- exp(em_param[1])
     
-    em_mat <- matrix(c(sigma2, delta_param), 
-                     dimnames = list(c("sigma^2", em_names),"Estimate"))
+      delta_param <- em_param[-1]/2
+    
+    
+      em_mat <- matrix(c(indv_baseline, delta_param), 
+                     dimnames = list(c("individual baseline variance", em_names[-1]),"Estimate"))
+    } else {
+      delta_param <- em_param/2
+      
+      
+      em_mat <- matrix(delta_param, 
+                       dimnames = list(em_names,"Estimate"))
+    }
+    
+    
   }
   
   else if (model == "GP") { # not sure what we want to show for this one
@@ -148,8 +161,15 @@ summary.ce <- function(object) {
                      dimnames = list(list("sigma^2",em_names[-1]),"Variance"))
   }
   
+  loglik <- object$loglik
+  
+  ## TODO
+  # AIC  
+  # BIC
   
   cat(" Type of model: ", model, "\n", "\n",
+      
+      "Loglikelihood: ", loglik, "\n", "\n",
       
       "# Fixed effects: \n",
       "Formula: ", fe, "\n", "\n")

@@ -28,7 +28,7 @@ OUcov <-function(d, param){
 Xcov <- R6::R6Class("Xcov", list(
   d = NULL,
   initialize = function(d) {self$d <- d},
-  get_name = function(){return('XCovSmooth')},
+  get_name = function(){return('XCov')},
   get_param_length = function(){return(self$d*(self$d+1)/2 )},
   get_Cov = function(param,obj) {
 
@@ -38,6 +38,11 @@ Xcov <- R6::R6Class("Xcov", list(
   get_mean = function(param, obj){
     m <- rep(0, self$d)
     return(m)
+  },
+  get_Amean = function(param, obj){
+    m <- self$get_mean(param, obj)
+    X <- obj$X
+    return(X%*%m)
   },
   get_AtCA  = function(param, obj){
     X <- obj$X
@@ -71,6 +76,11 @@ XcovSmooth <- R6::R6Class("XcovSmooth", list(
     m <- rep(0, self$d)
     return(m)
   },
+  get_Amean = function(param, obj){
+    m <- self$get_mean(param, obj)
+    X <- obj$X
+    return(X%*%m)
+  },
   get_Cov = function(param,obj) {
 
     Sigma <- as.matrix(nlme::pdLogChol(param[(self$d_w + 1):length(param)]))
@@ -96,7 +106,7 @@ XcovSmooth <- R6::R6Class("XcovSmooth", list(
 #' weighted covariance
 #' The covariance of Y from the model
 #' Z where Z ~ N(0, exp(E%*% delta )) where
-#' W is n x d
+#' W is n x d                                   ## *E is n x d?
 #'
 expWeightDiag <- R6::R6Class("expWeightDiag", list(
   d = NULL,
@@ -168,6 +178,10 @@ OUbridge <- R6::R6Class("OUbridge", list(
     #TODO
     m <- rep(0, length(obj[[time]]))
     return(m)
+  },
+  
+  get_Amean = function(param, obj, time = 'time'){
+    return(self$get_mean(param, obj, time = 'time'))
   },
   get_A  = function(param, obj){
     return(NULL)

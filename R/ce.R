@@ -46,12 +46,16 @@ ce <- function(formula1,
   
   paramList <- paramToList(res$par, object)
   
+  loglik <- -res$value
+  
   ce_model <- list(model, 
+                   loglik,
                    betas, 
                    cov_beta, 
                    paramList)
   
   names(ce_model) <- c("model",
+                       "loglik",
                        "betas", 
                        "cov_beta", 
                        "covariances")

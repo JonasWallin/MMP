@@ -150,7 +150,7 @@ getData <- function(formula1,
   e_int <- attr(termsE,"intercept")
   
   if (e_int == 1) {
-    e_names <- c("(intercept?)", e_names)
+    e_names <- c("(Intercept)", e_names)
   }
   
   # create wNOISE/WEI/TI/(WET, TODO)
