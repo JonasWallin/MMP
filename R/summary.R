@@ -161,17 +161,32 @@ summary.ce <- function(object) {
                      dimnames = list(list("sigma^2",em_names[-1]),"Variance"))
   }
   
+  # model fit
   loglik <- object$loglik
   
-  ## TODO
-  # AIC  
-  # BIC
   
-  cat(" Type of model: ", model, "\n", "\n",
+  k <- sum(length(unlist(object$covariances[1])),
+           length(unlist(object$covariances[2])),
+           length(unlist(object$covariances[3])),
+           length(fe_param))
+  
+  n <- object$n
+  
+  ## TODO
+  # AIC: 2*k - 2*loglik, k = number of estimated parameters  
+  aic <- (2*k)-(2*loglik)
+  
+  # BIC: k*ln(n)-2*loglik, n=nr of observations
+  bic <- (k*log(n))-(2*loglik)
+  
+  fit <- c(loglik, aic, bic)
+  names(fit) <- list("logLik", "AIC", "BIC")
+  
+  cat(" Type of model: ", model, "\n", "\n")
       
-      "Loglikelihood: ", loglik, "\n", "\n",
+      print(fit) 
       
-      "# Fixed effects: \n",
+  cat("\n", "\n","# Fixed effects: \n",
       "Formula: ", fe, "\n", "\n")
   
   print(fe_mat)

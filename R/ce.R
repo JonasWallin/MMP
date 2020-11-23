@@ -17,6 +17,7 @@ ce <- function(formula1,
                   time,
                   data)
   
+  n <- length(unlist(data[1]))
   
   model <- list(list(formula1,data$names[1]), 
                 list(formula2,data$names[2]), 
@@ -52,13 +53,15 @@ ce <- function(formula1,
                    loglik,
                    betas, 
                    cov_beta, 
-                   paramList)
+                   paramList,
+                   n)
   
   names(ce_model) <- c("model",
                        "loglik",
                        "betas", 
                        "cov_beta", 
-                       "covariances")
+                       "covariances",
+                       "n")
   
   # create class
     class(ce_model) <- "ce"
