@@ -61,14 +61,16 @@ ce <- function(formula1,
                    betas, 
                    cov_beta, 
                    paramList,
-                   n)
+                   n,
+                   object)
   
   names(ce_model) <- c("model",
                        "loglik",
                        "betas", 
                        "cov_beta", 
                        "covariances",
-                       "n")
+                       "n",
+                       "object")
   
   # create class
     class(ce_model) <- "ce"
