@@ -39,7 +39,14 @@ ce <- function(formula1,
   
   param <- param0(object)
   
+  if (model$Method == "GP") {
+  
   res <-optim(param, function(x){-loglik(x, object) })
+  res <-optim(res$par, function(x){-loglik(x, object) })
+  
+  } else {
+    res <-optim(param, function(x){-loglik(x, object) })
+  }
   
   betas <-getbeta(res$par, object)
   

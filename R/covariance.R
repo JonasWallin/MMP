@@ -134,8 +134,8 @@ expWeightDiag <- R6::R6Class("expWeightDiag", list(
 
 #'
 #' Covariance of an OU processes conditioning on
-#' X(exp(D%*%\delta))  = 0 where D%*%delta is a parameter and
-#' X(t) = 0 for t>exp(D%*%\delta)
+#' X(exp(D%*%\beta_delta))  = 0 where D%*%beta_delta is a parameter and
+#' X(t) = 0 for t>delta=tmin + exp(D%*%beta_delta)
 #' @param \delta 
 #' @param \sigma
 #' @param \range
@@ -153,21 +153,22 @@ OUbridge <- R6::R6Class("OUbridge", list(
   get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
 
     delta <- self$tmin + c(exp(obj[[cov_name]]%*%as.vector(param[1:(self$d-2)])))
+
     Sigma <- matrix(0, 
                     nrow = length(obj[[time]]),
                     ncol = length(obj[[time]]))
     # time < delta
     
     less_delta <- obj[[time]] < delta
-    time <- c(obj[[time]][less_delta], delta)
-    D <- as.matrix(dist(time))
+    time <- c(obj[[time]][less_delta], delta) 
+    Dist <- as.matrix(dist(time))    
     n_ <- length(time)
    
-    Sigma_p <- OUcov(D, param[(self$d-1):self$d])
+    Sigma_p <- OUcov(Dist, param[(self$d-1):self$d]) # the two last param
     # conditional distribution
     Sigma[less_delta,less_delta] <- Sigma_p[1:(n_-1),1:(n_-1)] -
                                     Sigma_p[1:(n_-1),n_, drop = FALSE]%*%t(Sigma_p[1:(n_-1),n_, drop = FALSE]/Sigma_p[n_,n_])
-    return(Sigma)
+  return(Sigma)
   },
   get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
     Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
