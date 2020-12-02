@@ -2,7 +2,7 @@
 # covaraince processes for teamObject
 #
 #
-
+library(rSPDE)
 
 #'OUcov
 #'
@@ -12,12 +12,33 @@
 #'
 #' @param d      - (n x n) distance matrix
 #' @param param  - (2 x 1) \sigma, \theta,
+#'                         \sigma - standard devation
+#'                         \theta - 1/length_scale
 OUcov <-function(d, param){
 
   sigma <- exp(param[1])
   theta <- exp(param[2])
   Cov   <- (sigma^2 /(2 * theta) ) * exp(-theta * d)
   return(Cov)
+}
+
+#'
+#' Matern Covariance function
+#'
+#' @param d      - (n x n) distance matrix
+#' @param param  - (3 x 1) \sigma, \kappa, \nu
+#'                         \sigma - standard devation
+#'                         \kappa - 1/length_scale
+#'                         \nu    - differntiablity
+#'                         
+Materncov <- function(d, param){
+  sigma <- exp(param[1])
+  kappa <- exp(param[2])
+  nu    <- exp(param[3])
+  return(rSPDE::matern.covariance(d, 
+                                  kappa = kappa, 
+                                  nu = nu, 
+                                  sigma = sigma))
 }
 #'Xcov
 #'
@@ -187,3 +208,51 @@ OUbridge <- R6::R6Class("OUbridge", list(
     return(NULL)
   }
 ))
+
+MaternBridge <- R6::R6Class("Matern bridge", list(
+  d = NULL,
+  tmin = NULL,
+  tmax = NULL,
+  initialize = function(tmin, tmax,d_D) {self$tmin <- tmin;
+  self$tmax <- tmax;
+  self$d<- 3 + d_D },
+  get_name = function(){return('Matern bridge')},
+  get_param_length = function(){return(self$d)},
+  get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
+    
+    delta <- self$tmin + c(exp(obj[[cov_name]]%*%as.vector(param[1:(self$d-3)])))
+    Sigma <- matrix(0, 
+                    nrow = length(obj[[time]]),
+                    ncol = length(obj[[time]]))
+    # time < delta
+    
+    less_delta <- obj[[time]] < delta
+    time <- c(obj[[time]][less_delta], delta)
+    D <- as.matrix(dist(time))
+    n_ <- length(time)
+    
+    Sigma_p <- Materncov(D, param[(self$d-2):self$d])
+    # conditional distribution
+    Sigma[less_delta,less_delta] <- Sigma_p[1:(n_-1),1:(n_-1)] -
+      Sigma_p[1:(n_-1),n_, drop = FALSE]%*%t(Sigma_p[1:(n_-1),n_, drop = FALSE]/Sigma_p[n_,n_])
+    return(Sigma)
+  },
+  get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
+    return(Sigma)
+  },
+  
+  get_mean = function(param, obj, time = 'time'){
+    #TODO
+    m <- rep(0, length(obj[[time]]))
+    return(m)
+  },
+  
+  get_Amean = function(param, obj, time = 'time'){
+    return(self$get_mean(param, obj, time = 'time'))
+  },
+  get_A  = function(param, obj){
+    return(NULL)
+  }
+))
+
