@@ -110,9 +110,7 @@ summary.ce <- function(object) {
     }
     
     
-  }
-  
-  else if (model == "GP") { # not sure what we want to show for this one
+  } else if (model == "GP") {
     
     ## fixed effects
     fe <- as.character(object$model$`Fixed effects`[1]) # formula
@@ -120,21 +118,23 @@ summary.ce <- function(object) {
     fe_param <- object$betas
     
     fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-    dimnames(fe_mat) <- list(fe_names,c("Value", "Variance"))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
     
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
     ## random effects
     
-    # individual (exclude for now, does not work to have covariates here)
+    # individual
     
-    #ire <- as.character(object$model$`Individual random effects`[1]) # formula
-    #ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
+    ire <- as.character(object$model$`Individual random effects`[1]) # formula
+    ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
     
+    ire_param <- unlist(object$covariances$indv[[1]])
+    ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
+    dimnames(ire_mat) <- list(ire_names,ire_names)
     
-    #ire_param <- unlist(object$covariances$indv)
-    #ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
-    #dimnames(ire_mat) <- list(ire_names,ire_names)
+    # sigma_u 
+    
     
     # team
     
@@ -146,20 +146,32 @@ summary.ce <- function(object) {
     dimnames(tre_mat) <- list(tre_names,tre_names)
     
     
-    # emergence (on individual level for CEI)
-    em <- as.character(object$model[4])
+    # emergence GP
+    
     
     em <- as.character(object$model$`Emergence model`[1]) # formula
-    em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
+    em_names <- unlist(object$model$`Emergence model`[2])[-1] # names of covariates
     
-    em_param <- unlist(object$covariances$indv)
+  
+    em_param <- unlist(object$covariances$indv[[2]])
+    n_param <- length(em_param)
     
-    sigma2 <- exp(em_param[1])
-    delta_param <- em_param[-1]/2
+    beta_delta <- em_param[1]
+    sigma <- exp(em_param[n_param-1])
+    theta <- exp(em_param[n_param])
     
-    em_mat <- matrix(c(sigma2, delta_param), 
-                     dimnames = list(list("sigma^2",em_names[-1]),"Variance"))
+    if (n_param > 3) {
+      
+      additional_param <- em_param[2:(n_param-2)]
+      
+      em_mat <- matrix(c(beta_delta,sigma,theta, additional_param),
+                       dimnames = list(c("beta_delta","sigma","theta",em_names),"Estimate"))
+    } else {
+      em_mat <- matrix(c(beta_delta,sigma,theta),
+                       dimnames = list(c("beta_delta","sigma","theta"),"Estimate"))
+    }
   }
+    
   
   # model fit
   loglik <- object$loglik
@@ -172,7 +184,7 @@ summary.ce <- function(object) {
   
   n <- object$n
   
-  ## TODO
+  ## 
   # AIC: 2*k - 2*loglik, k = number of estimated parameters  
   aic <- (2*k)-(2*loglik)
   

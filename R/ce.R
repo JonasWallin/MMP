@@ -39,7 +39,14 @@ ce <- function(formula1,
   
   param <- param0(object)
   
+  if (model$Method == "GP") {
+  
   res <-optim(param, function(x){-loglik(x, object) })
+  res <-optim(res$par, function(x){-loglik(x, object) })
+  
+  } else {
+    res <-optim(param, function(x){-loglik(x, object) })
+  }
   
   betas <-getbeta(res$par, object)
   
@@ -54,14 +61,16 @@ ce <- function(formula1,
                    betas, 
                    cov_beta, 
                    paramList,
-                   n)
+                   n,
+                   object)
   
   names(ce_model) <- c("model",
                        "loglik",
                        "betas", 
                        "cov_beta", 
                        "covariances",
-                       "n")
+                       "n",
+                       "object")
   
   # create class
     class(ce_model) <- "ce"

@@ -10,7 +10,7 @@
 #' Xf        - fixed effects
 #' XI        - individual effects (random)
 #' XT        - team effects (random)
-#' WLI       - linear weighting individual effect
+#' WLI       - linear weighting individual effect # döp om, ta bort weighting sen
 #' WLT       - linear weighting team effect
 #' WEI       - exponential weighting individual effect
 #' WET       - exponential weighting team effect
@@ -35,6 +35,8 @@ dataToObject <- function(data_list){
   method <- as.character(data[["method"]])
   
   if (method == "CEM") {
+    WLI <- T
+  } else if (method == "GP"){
     WLI <- T
   } else {
     WLI <- F
@@ -116,11 +118,12 @@ dataToObject <- function(data_list){
       TeamObj$indvCovs[[count]] <- Xcov$new(d)
       count <- count + 1
     }
-  }
-  if(is.null(WEI)==F){
-    d <- ncol(as.matrix(XI))
-    TeamObj$indvCovs[[count]] <- XcovSmooth$new(d, dim(WEI)[2])
-    count <- count + 1
+  
+    if(is.null(WEI)==F){
+      d <- ncol(as.matrix(XI))
+      TeamObj$indvCovs[[count]] <- XcovSmooth$new(d, dim(WEI)[2])
+      count <- count + 1
+    }
   }
   if(is.null(TI)==F){
     TeamObj$indvCovs[[count]] <- OUbridge$new(min(time), max(time), dim(TI)[2])
