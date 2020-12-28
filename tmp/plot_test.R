@@ -51,7 +51,7 @@ summary.ce(CEI)
 ##
 
 GP <- ce(y.centered ~ 1, 
-         ~ 1 | person, 
+         ~ -1 | person, 
          ~ 1 | group, 
          emergence = ~ 1, 
          method = "GP",
