@@ -112,7 +112,7 @@ dataToObject <- function(data_list){
   # setting up the indiuval random effects
   ###
   count <- 1
-  if(is.null(XI)==F){
+  if(is.null(XI)==F & length(XI)>0){
     if(WLI){
       d <-ncol(as.matrix(XI))
       TeamObj$indvCovs[[count]] <- Xcov$new(d)
