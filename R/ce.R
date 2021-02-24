@@ -54,6 +54,8 @@ ce <- function(formula1,
   
   paramList <- paramToList(res$par, object)
   
+  paramPlot <- res$par
+  
   loglik <- -res$value
   
   ce_model <- list(model, 
@@ -62,7 +64,8 @@ ce <- function(formula1,
                    cov_beta, 
                    paramList,
                    n,
-                   object)
+                   object,
+                   paramPlot)
   
   names(ce_model) <- c("model",
                        "loglik",
@@ -70,7 +73,8 @@ ce <- function(formula1,
                        "cov_beta", 
                        "covariances",
                        "n",
-                       "object")
+                       "object",
+                       "unlisted_covariances")
   
   # create class
     class(ce_model) <- "ce"

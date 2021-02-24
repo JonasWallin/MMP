@@ -14,7 +14,7 @@ sherifdat <- subset(sherifdat, time >= 0 & time <= 2)
 # y ~ N(I,  \exp(-delta * time)*\sigma_y)
 ##
 
-CEM <- ce(y.centered ~ 1, 
+CEM <- ce(y ~ 1, 
          ~ 1 | person, 
          ~ 1 | group, 
          emergence = ~ 1 + time, 
@@ -32,7 +32,7 @@ CEM <- ce(y.centered ~ 1,
 # y ~ N(I, \sigma_y)
 ##
 
-CEI <- ce(y.centered ~ time, 
+CEI <- ce(y ~ 1, 
          ~ 1 | person, 
          ~ 1 | group, 
          emergence = ~ -1 + time, 
@@ -50,14 +50,17 @@ summary.ce(CEI)
 # y ~ N(I, \sigma_y)
 ##
 
-GP <- ce(y.centered ~ 1, 
-         ~ -1 | person, 
+GP <- ce(y ~ 1, 
+         ~ 1 | person, 
          ~ 1 | group, 
          emergence = ~ 1, 
          method = "GP",
          time = "time",
          data = sherifdat)
 
+summary.ce(GP)
 
 r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
+
+smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time)
 
