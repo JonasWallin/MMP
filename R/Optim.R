@@ -196,6 +196,10 @@ smoothIndivual <- function(param, Obj){
        sigmaI <- sigmaI + Obj$indvCovs[[iii]]$get_AtCA(paramList$indv[[iii]], Team_i$indv[[ii]])
      #Indiv | obs
      mu_I    <- sigmaI%*%Matrix::t(Team_i$indv[[ii]]$A)%*%y_smooth
+     if(length(beta) > 0){
+       X_i    <- Obj$teams[[i]]$data$X
+       mu_I    <- as.vector(mu_I) + Matrix::t(Team_i$indv[[ii]]$A)%*%X_i%*%beta
+     }
      sigma_I <- sigmaI - sigmaI%*%Matrix::t(Team_i$indv[[ii]]$A)%*%Matrix::solve(Sigma_X,Team_i$indv[[ii]]$A%*%sigmaI)
      smoothRes$teams[[i]]$indv[[ii]] <- data.frame(mean = as.vector(mu_I),
                                                  var  = Matrix::diag(sigma_I))
