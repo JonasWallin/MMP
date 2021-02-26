@@ -54,7 +54,7 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   Cov <- rep(0, length(time))
   for(i in 1:length(time)){
     indv <- list(D=as.matrix(1),time=time[i])
-    Cov[i] <- GP$object$indvCovs[[2]]$get_Cov(paramList3$indv[[2]], indv)  + exp(paramList3$error[[1]])
+    Cov[i] <- GP$object$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv)  + exp(paramList3$error[[1]])
   }
   r_3 <- sqrt(Cov/Cov[1])
   lines(time, r_3, col='green',cex=2)

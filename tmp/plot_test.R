@@ -50,6 +50,7 @@ summary.ce(CEI)
 # y ~ N(I, \sigma_y)
 ##
 
+
 GP <- ce(y ~ 1, 
          ~ 1 | person, 
          ~ 1 | group, 
