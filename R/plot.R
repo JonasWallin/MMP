@@ -44,7 +44,7 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   
   # CEI
 
-  r_2 <- exp(2*paramList2$indv[[1]][1] + paramList2$indv[[1]][2]*time) + exp(paramList2$error[[1]]) # this seems more reasonable, kolla med JOnas
+  r_2 <- exp(2*paramList2$indv[[1]][2] + paramList2$indv[[1]][1]*time)  + exp(paramList2$error[[1]])
   r_2 <- sqrt(r_2/r_2[1])
   lines(time, r_2, col='blue')
   
@@ -54,7 +54,7 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   Cov <- rep(0, length(time))
   for(i in 1:length(time)){
     indv <- list(D=as.matrix(1),time=time[i])
-    Cov[i] <- GP$object$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv)  + exp(paramList3$error[[1]])
+    Cov[i] <- GP$object$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv) + GP$object$indvCovs[[2]]$get_Cov(paramList3$indv[[2]], indv)  
   }
   r_3 <- sqrt(Cov/Cov[1])
   lines(time, r_3, col='green',cex=2)
