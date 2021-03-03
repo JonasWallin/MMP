@@ -6,7 +6,8 @@ library(MMP)
 ## excluding individual measurement occasions
 data("sherifdat")
 sherifdat <- subset(sherifdat, time <= 2)
-
+sherifdat$time <- sherifdat$time + 1
+sherifdat$y <- sherifdat$y.centered
 # recreate CEM from Lang et al bookchapter
 CEM <- ce(y ~ 1+time, 
           ~ 1 | person, 
