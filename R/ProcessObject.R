@@ -19,7 +19,12 @@
 #' WNOISE    - covariates to the measurement error
 #' dataOrder - for filtering
 
-
+#'
+#'
+#' @param data_list
+#' 
+#'        $method.team - method for time series team (allow null)
+#'
 dataToObject <- function(data_list){
   
   # data_list - output list from function getData()
@@ -94,7 +99,13 @@ dataToObject <- function(data_list){
     wNOISE = as.matrix(rep(1,length(y)))
   }
   TeamObj$errorCovs[[1]] <- expWeightDiag$new(dim(wNOISE)[2])
+  
+  
+  ######
+  # setting up team random effects
+  ######
   count <- 1
+  
   if(is.null(XT)==F){
     if(WLT){
       d <-ncol(as.matrix(XT))
@@ -107,6 +118,14 @@ dataToObject <- function(data_list){
       TeamObj$teamCovs[[count]] <- XcovSmooth$new(d, dim(WET)[2])
     }
   }
+  if(is.null(data[["method.team"]])==F){
+    method.team <- as.character(data[["method.team"]])
+    if(method.team == "OU"){
+      TeamObj$teamCovs[[count]] <- OU$new()
+      count <- count + 1
+    }
+  }
+  
   
   ###  
   # setting up the indiuval random effects
@@ -152,8 +171,18 @@ dataToObject <- function(data_list){
     if(is.null(WET)==F)
       TeamObj$teams[[i]]$W = as.matrix(WET)[Teams == uTeams[i],, drop = FALSE]
 
+    if(is.null(data[["method.team"]])==F){
+      if(method.team == "OU"){
+        timeTeam                <- time[Teams == uTeams[i]]
+        TeamObj$teams[[i]]$time  <- timeTeam
+      }
+      }
+    
     TeamObj$teams[[i]]$indv <- list()
     indv_i <-  levels(TeamObj$teams[[i]]$data$indv)
+    
+  
+    
     ##
     # setting up indivuals data
     ##
@@ -181,11 +210,11 @@ dataToObject <- function(data_list){
       }
       #is there is a time series component
       if(is.null(TI)==F){
-        timeTeam <- time[Teams == uTeams[i]]
-        COVTI <- TI[Teams == uTeams[i], , drop=FALSE]
-        COVTI <- COVTI[index, , drop=FALSE]
+        timeTeam                <- time[Teams == uTeams[i]]
+        COVTI      <- TI[Teams == uTeams[i], , drop=FALSE]
+        COVTI_indv <- COVTI[index, , drop=FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$time <- timeTeam[index]
-        TeamObj$teams[[i]]$indv[[ii]]$D <- COVTI[1,, drop=FALSE]
+        TeamObj$teams[[i]]$indv[[ii]]$D    <- COVTI_indv[1,, drop=FALSE]
       }
     }
   }

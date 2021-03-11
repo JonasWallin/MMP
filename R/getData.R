@@ -9,6 +9,7 @@
 #' @param formula3 ~ team.random | team
 #' @param emergence ~ TIME + additional for methods CEM and CEI, ~ covariates (without time) for GP
 #' @param method "CEM" Lang et al. model, "CEI" our altered model, "GP" Gaussian Process
+#' @param method "OU - Guassian process for teams"
 #' @param time name of time variable in quote, "TIME"
 #' @param data 
 #'
@@ -30,8 +31,9 @@ getData <- function(formula1,
                     formula3, 
                     emergence, 
                     method,
-                    time = NULL,
-                    data) {
+                    data,
+                    method.team = NULL,
+                    time = NULL) {
   
   ### Xf and y
   
@@ -199,7 +201,14 @@ getData <- function(formula1,
     
     
   } else {
+    if(is.null(method.team)==F){
+      if(method.team == "OU"){
+        timeName <- time
+        time <- data[,timeName]
+      }
+    }else{
     time <- NULL 
+    }
   }
   
   names <- list(f1_names, f2_names, f3_names, e_names)
@@ -220,7 +229,8 @@ getData <- function(formula1,
                    time, 
                    wNOISE,
                    names,
-                   method)
+                   method,
+                   method.team)
   
   names(matrices) <- c("y", 
                        "Xf", 
@@ -234,7 +244,8 @@ getData <- function(formula1,
                        "time", 
                        "wNOISE",
                        "names",
-                       "method")
+                       "method",
+                       "method.team")
   
   return(matrices)
   

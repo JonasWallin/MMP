@@ -63,7 +63,7 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
 ### Smoothing distribution where new observations could land
 
 
-smooth.plot <- function(CEM, CEI, GP, y, time, type = "total") {
+smooth.plot <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(6,8)) {
   
   paramList1 <- CEM$covariances # CEM
   paramList2 <- CEI$covariances # CEI
@@ -84,29 +84,33 @@ smooth.plot <- function(CEM, CEI, GP, y, time, type = "total") {
 
   par(mfrow=c(2,3), mai = c(0.5, 0.2, 0.1, 0.2))
   time <- unique(time)
-  for(j in 1:2){
+  for(j in groups.to.plot){
     for(i in 1:3){
-    
-      plot(time, as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y), 
+      if(length(as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y)) ==3){
+        time_i = time[2:4]
+      }else{
+        time_i = time[1:4]
+      }
+      plot(time_i, as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y), 
            ylab='obs',ylim=c(range_y[1]-1,range_y[2]+1),cex=1, pch=19)
     
       # CEM
       m <- Smooth1$teams[[j]]$indv[[i]]$mean
-      s <-  sqrt(Smooth1$teams[[j]]$indv[[i]]$var  +  exp(paramList1$error[[1]][1] + paramList1$error[[1]][2]*time))
-      lines(time,m + 2*s, col='red' )
-      lines(time,m - 2*s, col='red' )
+      s <-  sqrt(Smooth1$teams[[j]]$indv[[i]]$var  +  exp(paramList1$error[[1]][1] + paramList1$error[[1]][2]*time_i))
+      lines(time_i,m + 2*s, col='red' )
+      lines(time_i,m - 2*s, col='red' )
     
       # CEI
       m <- Smooth2$teams[[j]]$indv[[i]]$mean
       s <-  sqrt(Smooth2$teams[[j]]$indv[[i]]$var  + exp(paramList2$error[[1]]))
-      lines(time,m + 2*s, col='blue' )
-      lines(time,m - 2*s, col='blue' )
+      lines(time_i,m + 2*s, col='blue' )
+      lines(time_i,m - 2*s, col='blue' )
     
       # GP
       m <- Smooth3$teams[[j]]$indv[[i]]$mean
       s <-  sqrt(Smooth3$teams[[j]]$indv[[i]]$var  +  exp(paramList3$error[[1]][1]))
-      lines(time,m + 2*s, col='green' )
-      lines(time,m - 2*s, col='green' )
+      lines(time_i,m + 2*s, col='green' )
+      lines(time_i,m - 2*s, col='green' )
       }
   }
   par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)

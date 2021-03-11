@@ -210,6 +210,56 @@ OUbridge <- R6::R6Class("OUbridge", list(
   }
 ))
 
+#'
+#' Covariance of an OU processes conditioning on
+#' X(exp(D%*%\beta_delta))  = 0 where D%*%beta_delta is a parameter and
+#' X(t) = 0 for t>delta=tmin + exp(D%*%beta_delta)
+#' @param \delta 
+#' @param \sigma
+#' @param \range
+
+
+OU <- R6::R6Class("OU", list(
+  d = 2,
+  tmin = NULL,
+  tmax = NULL,
+  initialize = function() {
+  self$d <- 2  },
+  get_name = function(){return('OU')},
+  get_param_length = function(){return(self$d)},
+  get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
+    
+    Sigma <- matrix(0, 
+                    nrow = length(obj[[time]]),
+                    ncol = length(obj[[time]]))
+    # time < delta
+    
+    
+    time <- obj[[time]]
+    Dist <- as.matrix(dist(time))   
+    Sigma <- OUcov(Dist, param) # the two last param
+    
+    return(Sigma)
+  },
+  get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
+    return(Sigma)
+  },
+  
+  get_mean = function(param, obj, time = 'time'){
+    #TODO
+    m <- rep(0, length(obj[[time]]))
+    return(m)
+  },
+  
+  get_Amean = function(param, obj, time = 'time'){
+    return(self$get_mean(param, obj, time = 'time'))
+  },
+  get_A  = function(param, obj){
+    return(NULL)
+  }
+))
+
 MaternBridge <- R6::R6Class("Matern bridge", list(
   d = NULL,
   tmin = NULL,

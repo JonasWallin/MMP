@@ -6,6 +6,7 @@ ce <- function(formula1,
                formula3, 
                emergence, 
                method,
+               method.team = NULL,
                time = NULL,
                data) {
   
@@ -14,8 +15,9 @@ ce <- function(formula1,
                   formula3, 
                   emergence, 
                   method,
-                  time,
-                  data)
+                  data,
+                  method.team,
+                  time)
   
   n <- length(unlist(data[1]))
   

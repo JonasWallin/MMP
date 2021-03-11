@@ -264,8 +264,11 @@ param0 <- function(obj){
   }
 
   if(length(obj$teamCovs)>0){
-    for(i in 1:length(obj$teamCovs))
+    for(i in 1:length(obj$teamCovs)){
+      print( obj$teamCovs[[i]]$get_param_length())
       param <- c(param, rep(0, obj$teamCovs[[i]]$get_param_length()))
+      
+    }
   }
   return(param)
 }
