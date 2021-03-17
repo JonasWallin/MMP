@@ -26,6 +26,7 @@ ce <- function(formula1,
                 list(formula3,data$names[3]), 
                 list(emergence,data$names[4]),
                 method,
+                method.team,
                 time)
   
   names(model) <- c("Fixed effects", 
@@ -33,6 +34,7 @@ ce <- function(formula1,
                     "Team random effects",
                     "Emergence model",
                     "Method",
+                    "Team process",
                     "Time")
   
   

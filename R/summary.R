@@ -35,7 +35,19 @@ summary.ce <- function(object) {
   tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
   dimnames(tre_mat) <- list(tre_names,tre_names)
   
+  # team GP
+  if (!is.null(object$model$`Team process`)) {
+    
+    tgp_param <- unlist(object$covariances$team[[2]])
+    
+    sigma <- exp(tgp_param[1])
+    theta <- exp(tgp_param[2])
+    
+    
+    tgp_mat <- matrix(c(sigma,theta),
+                      dimnames = list(c("sigma","theta"),"Estimate"))
   
+  }
   # emergence
   em <- as.character(object$model$`Emergence model`[1]) # formula
   em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
@@ -76,14 +88,29 @@ summary.ce <- function(object) {
     
     
     # team
+      # random effects
     
     tre <- as.character(object$model$`Team random effects`[1]) # formula
     tre_names <- unlist(object$model$`Team random effects`[2]) # names of covariates
     
-    tre_param <- unlist(object$covariances$team)
+    tre_param <- unlist(object$covariances$team[1])
     tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
+    
     dimnames(tre_mat) <- list(tre_names,tre_names)
     
+      # team GP
+    if (!is.null(object$model$`Team process`)) {
+      
+    tgp_param <- unlist(object$covariances$team[[2]])
+    
+    sigma <- exp(tgp_param[1])
+    theta <- exp(tgp_param[2])
+    
+ 
+    tgp_mat <- matrix(c(sigma,theta),
+                       dimnames = list(c("sigma","theta"),"Estimate"))
+
+    }
     
     # emergence (on individual level for CEI)
     
@@ -141,11 +168,22 @@ summary.ce <- function(object) {
     tre <- as.character(object$model$`Team random effects`[1]) # formula
     tre_names <- unlist(object$model$`Team random effects`[2]) # names of covariates
     
-    tre_param <- unlist(object$covariances$team)
+    tre_param <- unlist(object$covariances$team[1])
     tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
     dimnames(tre_mat) <- list(tre_names,tre_names)
     
-    
+    # team GP
+    if (!is.null(object$model$`Team process`)) {
+      
+      tgp_param <- unlist(object$covariances$team[[2]])
+      
+      sigma <- exp(tgp_param[1])
+      theta <- exp(tgp_param[2])
+      
+      
+      tgp_mat <- matrix(c(sigma,theta),
+                        dimnames = list(c("sigma","theta"),"Estimate"))
+    }
     # emergence GP
     
     
@@ -215,6 +253,12 @@ summary.ce <- function(object) {
       "Covariance matrix \n")
   
   print(tre_mat)
+  
+  if (!is.null(object$model$`Team process`)) {
+    cat("\n Team GP: \n")
+    
+    print(tgp_mat)
+  }
   
   cat("\n # Emergence: \n",
       "Formula: ", em, "\n  \n")
