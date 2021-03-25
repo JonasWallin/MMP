@@ -249,24 +249,24 @@ paramToList <- function(param, obj){
 }
 #'
 #'
-#' creates a zero guess of the parameters list
+#' creates a zero guess of the parameters list 
+#' 
 #'
 #'
 param0 <- function(obj){
 
   param <- c()
   for(i in 1:length(obj$errorCov))
-    param <- c(param, rep(0, obj$errorCovs[[i]]$get_param_length()))
+    param <- c(param, rep(0, obj$errorCovs[[i]]$get_param_length())) 
 
   if(length(obj$indvCovs)>0){
     for(i in 1:length(obj$indvCovs))
-      param <- c(param, rep(0, obj$indvCovs[[i]]$get_param_length()))
+      param <- c(param, rep(0, obj$indvCovs[[i]]$get_param_length())) 
   }
 
   if(length(obj$teamCovs)>0){
     for(i in 1:length(obj$teamCovs)){
-      print( obj$teamCovs[[i]]$get_param_length())
-      param <- c(param, rep(0, obj$teamCovs[[i]]$get_param_length()))
+      param <- c(param, rep(0, obj$teamCovs[[i]]$get_param_length())) 
       
     }
   }
