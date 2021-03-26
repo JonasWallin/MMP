@@ -73,5 +73,5 @@ summary.ce(GP)
 # r plot
 r.plot(CEM, CEI.bridge, GP, sherifdat$y,sherifdat$group, sherifdat$time)
 
-smooth.plot(CEM, CEI.bridge, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
+smooth.plot(CEM, CEI.bridge, CEI, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
 smooth.plot(CEM, CEI.bridge, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))

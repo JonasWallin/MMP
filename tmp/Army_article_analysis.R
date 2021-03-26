@@ -1,7 +1,8 @@
 ## Army data
 ## 2021-03-25
 library(ggplot2)
-
+library(tidyverse)
+library(MMP)
 # the following is code from Lang et al. 2018 article, with my comments on what
 # it does
 

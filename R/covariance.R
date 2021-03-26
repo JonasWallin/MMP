@@ -116,7 +116,8 @@ XcovSmooth <- R6::R6Class("XcovSmooth", list(
 
   get_A  = function(param, obj, cov_name='W'){
     X <- obj$X
-    DX <- diag(c(exp(obj[[cov_name]]%*%param[1:self$d_w])))%*%X
+    diagonal <- c(exp(obj[[cov_name]]%*%param[1:self$d_w]))
+    DX <- diag(diagonal, nrow=length(diagonal))%*%X
     return(DX)
   }
 ))
