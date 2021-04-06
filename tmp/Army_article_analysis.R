@@ -124,60 +124,6 @@ CEM.army <- ce(JSAT ~ 1+TIME,
           data = army2)
 
 summary.ce(CEM.army)
-
-CEM.army.null <- ce(JSAT ~ 1+TIME, 
-               ~ 1 | SUBNUM, 
-               ~ 1 + TIME | UNIT, 
-               emergence = ~ 1, 
-               method = "CEM", 
-               data = army2)
-
-summary.ce(CEM.army.null)
-
-
-# CEI ## something is wrong here
-CEI <- ce(JSAT ~ 1+TIME, 
-          ~ 1 | SUBNUM, 
-          ~ 1 + TIME | UNIT, 
-          emergence = ~ -1 + TIME, 
-          time = "TIME",
-          method = "CEI", 
-          #method.team = "OU",
-          data = army2)
-
-summary.ce(CEI)
-
-CEI.bridge <- ce(JSAT ~ 1+TIME, 
-                 ~ 1 | SUBNUM, 
-                 ~ 1 | UNIT, 
-                 emergence = ~ -1 + TIME, 
-                 time = "TIME",
-                 method = "CEI", 
-                 method.team = "OU",
-                 data = army2)
-
- summary.ce(CEI.bridge)
- 
-# GP
-GP.army <- ce(JSAT ~ 1+TIME, 
-          ~ 1 | SUBNUM, 
-          ~ 1 | UNIT, 
-          emergence = ~ 1, 
-          method = "GP",
-          #method.team = "OU",
-          time = "TIME",
-          data = army2)
- 
-summary.ce(GP.army)
- 
-GP.bridge <- ce(JSAT ~ 1+TIME, 
-               ~ 1 | SUBNUM, 
-               ~ 1 | UNIT, 
-               emergence = ~ 1, 
-               method = "GP",
-               method.team = "OU",
-               time = "TIME",
-               data = army2)
  
 summary.ce(GP.bridge)
 

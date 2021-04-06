@@ -31,7 +31,7 @@ summary.ce <- function(object) {
   tre <- as.character(object$model$`Team random effects`[1]) # formula
   tre_names <- unlist(object$model$`Team random effects`[2]) # names of covariates
   
-  tre_param <- unlist(object$covariances$team)
+  tre_param <- unlist(object$covariances$team[1])
   tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
   dimnames(tre_mat) <- list(tre_names,tre_names)
   

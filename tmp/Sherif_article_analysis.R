@@ -27,6 +27,16 @@ CEM.null <- ce(y ~ 1+time,
 
 summary.ce(CEM.null)
 
+CEM.bridge <- ce(y ~ 1+time, 
+          ~ 1 | person, 
+          ~ 1 | group, 
+          emergence = ~ 1 + time, 
+          time = "time",
+          method = "CEM",
+          method.team = "OU",
+          data = sherifdat)
+
+summary.ce(CEM.bridge)
 
 ## Adjusted CEM
 CEI.bridge <- ce(y ~ 1+time, 
@@ -70,8 +80,27 @@ GP <- ce(y ~ 1+time,
 
 summary.ce(GP)
 
-# r plot
-r.plot(CEM, CEI.bridge, GP, sherifdat$y,sherifdat$group, sherifdat$time)
+# GP bridge
+GP.bridge <- ce(y ~ 1+time, 
+         ~ 1 | person, 
+         ~ 1 | group, 
+         emergence = ~ 1, 
+         method = "GP",
+         method.team = "OU",
+         time = "time",
+         data = sherifdat)
 
-smooth.plot(CEM, CEI.bridge, CEI, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
+summary.ce(GP.bridge)
+
+
+
+# r plot
+r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
+r.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y,sherifdat$group, sherifdat$time)
+
+smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
+smooth.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
 smooth.plot(CEM, CEI.bridge, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
+
+smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(6,8))
+smooth.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y, sherifdat$time, groups.to.plot = c(6,8))
