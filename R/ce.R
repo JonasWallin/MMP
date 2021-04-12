@@ -48,8 +48,21 @@ ce <- function(formula1,
   res <-optim(param, function(x){-loglik(x, object) })
   res <-optim(res$par, function(x){-loglik(x, object) })
   
+    if (res$convergence != 0) {
+      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      if (res$convergence != 0) {
+      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      }
+    }
+  
   } else {
     res <-optim(param, function(x){-loglik(x, object) })
+    if (res$convergence != 0) {
+      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      if (res$convergence != 0) {
+        res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      }
+    }
   }
   
   betas <-getbeta(res$par, object)
@@ -69,7 +82,8 @@ ce <- function(formula1,
                    paramList,
                    n,
                    object,
-                   paramPlot)
+                   paramPlot,
+                   res)
   
   names(ce_model) <- c("model",
                        "loglik",
@@ -78,7 +92,8 @@ ce <- function(formula1,
                        "covariances",
                        "n",
                        "object",
-                       "unlisted_covariances")
+                       "unlisted_covariances",
+                       "res")
   
   # create class
     class(ce_model) <- "ce"
