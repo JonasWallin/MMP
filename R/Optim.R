@@ -87,7 +87,9 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
       Sigma_X <- Sigma_X + as.matrix(Obj$teamCovs[[ii]]$get_AtCA(paramList$team[[ii]], Team_i))
 
     Sigma_X <- as.matrix(Sigma_X)
-    L <- chol(Sigma_X)
+    L = tryCatch({L <- chol(Sigma_X)}, error = function(err){return(-Inf)})
+    if(is.null(dim(L)))
+      return(list(lik =-Inf))
     # determinant of covariance matrix
     lik <- lik - sum(log(diag(L)))
     ##
