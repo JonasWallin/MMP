@@ -74,13 +74,40 @@ summary.ce <- function(object) {
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
     ## random effects
+    # individual
+    
+    
+    # emergence (on individual level for CEI)
+    
+    em <- as.character(object$model$`Emergence model`[1]) # formula
+    em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
+    
+    em_param <- unlist(object$covariances$indv)[1:length(em_names)]
+    
+    if (em_names[1]=="(Intercept)"){    
+      indv_baseline <- exp(em_param[1]) # inte rätt
+      
+      delta_param <- em_param[-1]/2 # inte rätt
+      
+      
+      em_mat <- matrix(c(indv_baseline, delta_param), 
+                       dimnames = list(c("individual baseline variance", em_names[-1]),"Estimate"))
+    } else {
+      delta_param <- em_param/2 # ska inte delas med två
+      
+      
+      em_mat <- matrix(delta_param, 
+                       dimnames = list(em_names,"Estimate"))
+    }
     
     # individual
     
     ire <- as.character(object$model$`Individual random effects`[1]) # formula
     ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
     
-    ire_param <- unlist(object$covariances$indv)[1:length(ire_names)]
+    n_indv_param <- length(unlist(object$covariances$indv))
+    
+    ire_param <- unlist(object$covariances$indv)[(length(em_names)+1):n_indv_param]
     ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
     dimnames(ire_mat) <- list(ire_names,ire_names)
     
@@ -112,29 +139,6 @@ summary.ce <- function(object) {
 
     }
     
-    # emergence (on individual level for CEI)
-    
-    
-    em <- as.character(object$model$`Emergence model`[1]) # formula
-    em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
-    
-    em_param <- unlist(object$covariances$indv)[length(ire_names)+1:length(em_names)]
-    
-    if (em_names[1]=="(Intercept)"){
-      indv_baseline <- exp(em_param[1])
-    
-      delta_param <- em_param[-1]/2
-    
-    
-      em_mat <- matrix(c(indv_baseline, delta_param), 
-                     dimnames = list(c("individual baseline variance", em_names[-1]),"Estimate"))
-    } else {
-      delta_param <- em_param/2
-      
-      
-      em_mat <- matrix(delta_param, 
-                       dimnames = list(em_names,"Estimate"))
-    }
     
     
   } else if (model == "GP") {
@@ -215,9 +219,7 @@ summary.ce <- function(object) {
   loglik <- object$loglik
   
   
-  k <- sum(length(unlist(object$covariances[1])),
-           length(unlist(object$covariances[2])),
-           length(unlist(object$covariances[3])),
+  k <- sum(length(unlist(object$covariances)),
            length(fe_param))
   
   n <- object$n
@@ -229,8 +231,9 @@ summary.ce <- function(object) {
   # BIC: k*ln(n)-2*loglik, n=nr of observations
   bic <- (k*log(n))-(2*loglik)
   
-  fit <- c(loglik, aic, bic)
-  names(fit) <- list("logLik", "AIC", "BIC")
+  # fit measures
+  fit <- c(loglik, aic, bic, round(k))
+  names(fit) <- list("logLik", "AIC", "BIC", "# of parameters")
   
   cat(" Type of model: ", model, "\n", "\n")
       
