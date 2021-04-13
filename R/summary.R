@@ -85,15 +85,15 @@ summary.ce <- function(object) {
     em_param <- unlist(object$covariances$indv)[1:length(em_names)]
     
     if (em_names[1]=="(Intercept)"){    
-      indv_baseline <- exp(em_param[1]) # inte rätt
+      indv_baseline <- em_param[1] # tror rätt men inte hundra
       
-      delta_param <- em_param[-1]/2 # inte rätt
+      delta_param <- em_param[-1] 
       
       
       em_mat <- matrix(c(indv_baseline, delta_param), 
                        dimnames = list(c("individual baseline variance", em_names[-1]),"Estimate"))
     } else {
-      delta_param <- em_param/2 # ska inte delas med två
+      delta_param <- em_param 
       
       
       em_mat <- matrix(delta_param, 
