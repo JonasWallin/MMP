@@ -10,6 +10,70 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   group <- group
   time <- time
   
+  #type <- type # total or level2 #TODO
+  
+  ###
+  #'
+  #' computing r for emperical and the three models
+  #'
+  ###
+  
+  r <- r.emperical(y, group, time)
+  
+  #
+  time <- seq(min(r$time), max(r$time), length.out = 100)
+  
+  # CEM
+  
+  r_1 <- exp(paramList1$error[[1]][1] + paramList1$error[[1]][2]*time) + exp(2* paramList1$indv[[1]]) #indv term, same as pdlogchol
+  r_1 <- sqrt(r_1/r_1[1])
+  
+  # CEI
+  
+  r_2 <- exp(2*paramList2$indv[[1]][2] + paramList2$indv[[1]][1]*time)  + exp(paramList2$error[[1]])
+  r_2 <- sqrt(r_2/r_2[1])
+  
+  # GP
+  
+  Cov <- rep(0, length(time))
+  for(i in 1:length(time)){
+    indv <- list(D=as.matrix(1),time=time[i])
+    Cov[i] <- GP$object$indvCovs[[1]]$get_Cov(paramList3$indv[[1]], indv) + GP$object$indvCovs[[2]]$get_Cov(paramList3$indv[[2]], indv)  
+  }
+  r_3 <- sqrt(Cov/Cov[1])
+  
+  # put together in one data frame
+  r_1 <- as.data.frame(cbind(time, r_1))
+  r_1 <- rename(r_1, r = r_1)
+  r_2 <- as.data.frame(cbind(time, r_2))
+  r_2 <- rename(r_2, r = r_2)
+  r_3 <- as.data.frame(cbind(time, r_3))
+  r_3 <- rename(r_3, r = r_3)
+  r <- rename(r, r_empirical = r)
+  
+  data <- bind_rows("CEM"=r_1, "CEI"=r_2, "GP"=r_3, .id = "Model")
+  data <- bind_rows(data, r)
+  
+  # plot
+  ggplot(data) +
+    geom_line(mapping = aes(time, r, linetype = Model), na.rm = T) +
+    geom_point(mapping = aes(time, r_empirical),na.rm = T) +
+    scale_linetype_discrete(na.translate=FALSE) +
+    theme_bw() +
+    labs(title = "R plot")
+  
+}
+
+r.plot_old <- function(CEM, CEI, GP, y, group, time, type = "total") {
+  
+  paramList1 <- CEM$covariances # CEM
+  paramList2 <- CEI$covariances # CEI
+  paramList3 <- GP$covariances # GP
+  
+  y <- y
+  group <- group
+  time <- time
+  
   type <- type # total or level2
   
   ###
