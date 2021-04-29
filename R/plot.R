@@ -30,7 +30,7 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   
   # CEI
   
-  r_2 <- exp(2*paramList2$indv[[1]][2] + paramList2$indv[[1]][1]*time)  + exp(paramList2$error[[1]])
+  r_2 <- exp(2*paramList2$indv[[1]][2] + 2*paramList2$indv[[1]][1]*time)  + exp(paramList2$error[[1]])
   r_2 <- sqrt(r_2/r_2[1])
   
   # GP
