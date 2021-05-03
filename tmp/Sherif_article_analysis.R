@@ -111,10 +111,5 @@ GP.bridge$res
 r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
 r.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y,sherifdat$group, sherifdat$time)
 
-smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
-smooth.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y, sherifdat$time, groups.to.plot = c(1,3))
-smooth.plot(CEM, CEI.bridge, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
-
-
 smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
 smooth.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
