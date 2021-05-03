@@ -56,13 +56,96 @@ r.plot <- function(CEM, CEI, GP, y, group, time, type = "total") {
   
   # plot
   ggplot(data) +
-    geom_line(mapping = aes(time, r, linetype = Model), na.rm = T) +
+    geom_line(mapping = aes(time, r, linetype = Model, color = Model), na.rm = T) +
     geom_point(mapping = aes(time, r_empirical),na.rm = T) +
     scale_linetype_discrete(na.translate=FALSE) +
+    scale_color_manual(values=c("#6BA2FF", "#F57970","#27C152"), na.translate = F) +
     theme_bw() +
-    labs(title = "R plot")
+    labs(title = "r(t) plot") +
+    xlab("Time") 
   
 }
+
+
+### Smoothing distribution where new observations could land
+smooth.plot <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(1,2)) {
+  
+  paramList1 <- CEM$covariances # CEM
+  paramList2 <- CEI$covariances # CEI
+  paramList3 <- GP$covariances # GP
+  
+  y <- y
+  time <- time
+  
+  Smooth1 <- smoothIndivual(CEM$unlisted_covariances, CEM$object)
+  Smooth2 <- smoothIndivual(CEI$unlisted_covariances, CEI$object)
+  Smooth3 <- smoothIndivual(GP$unlisted_covariances, GP$object)
+  
+  time <- unique(time)
+  data_ci <- data.frame()
+  data_obs <- data.frame()
+  for(j in groups.to.plot){
+    for(i in 1:3){
+      if(length(as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y)) != length(time)){
+        if (as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y)[1]==time[1]) {
+          time_i = time[1:(length(time)-1)]
+        } else {
+          time_i = time[2:length(time)]
+        }
+      }else{
+        time_i = time
+      }
+      
+      df <- as.data.frame(cbind(time_i,as.vector(Matrix::t(CEM$object$teams[[j]]$indv[[i]]$A)%*%CEM$object$teams[[j]]$data$Y)))
+      df <- rename(df, y_obs = V2)
+      df$person <- i
+      df$group <- j
+      
+      # CEM
+      m <- Smooth1$teams[[j]]$indv[[i]]$mean
+      s <-  sqrt(Smooth1$teams[[j]]$indv[[i]]$var  +  exp(paramList1$error[[1]][1] + paramList1$error[[1]][2]*time_i))
+      df1 <- as.data.frame(cbind(m + 2*s,m - 2*s,time_i))
+      df1 <- rename(df1, ul = V1, ll = V2)
+      
+      
+      # CEI
+      m <- Smooth2$teams[[j]]$indv[[i]]$mean
+      s <-  sqrt(Smooth2$teams[[j]]$indv[[i]]$var  + exp(paramList2$error[[1]]))
+      df2 <- as.data.frame(cbind(m + 2*s,m - 2*s,time_i))
+      df2 <- rename(df2, ul = V1, ll = V2)
+      
+      # GP
+      m <- Smooth3$teams[[j]]$indv[[i]]$mean
+      s <-  sqrt(Smooth3$teams[[j]]$indv[[i]]$var  +  exp(paramList3$error[[1]][1]))
+      df3 <- as.data.frame(cbind(m + 2*s,m - 2*s,time_i))
+      df3 <- rename(df3, ul = V1, ll = V2)
+      
+      temp_obs <- df
+      data_obs <- rbind(data_obs,temp_obs)
+      temp_data <-  bind_rows("CEM"=df1, "CEI"=df2, "GP"=df3, .id = "Model")
+      temp_data$person <- i
+      temp_data$group <- j
+      data_ci <- rbind(data_ci,temp_data)
+      
+    }
+  }
+  
+  # with different colors and linetypes
+  ggplot(data_obs) +
+    geom_point(aes(time_i,y_obs)) +
+    facet_grid(rows = vars(group), cols = vars(person),labeller = label_both) +
+    geom_line(data =data_ci, 
+              mapping = aes(time_i, ul, color = Model,linetype = Model)) +
+    geom_line(data =data_ci, 
+              mapping = aes(time_i, ll, color = Model, linetype = Model)) +
+    theme_bw() +
+    labs(title = "Title") +
+    xlab("Time") +
+    ylab("Y") +
+    scale_color_manual(values=c("#6BA2FF", "#F57970","#27C152"))
+  
+}
+
 
 r.plot_old <- function(CEM, CEI, GP, y, group, time, type = "total") {
   
@@ -127,7 +210,7 @@ r.plot_old <- function(CEM, CEI, GP, y, group, time, type = "total") {
 ### Smoothing distribution where new observations could land
 
 
-smooth.plot <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(6,8)) {
+smooth.plot_old <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(6,8)) {
   
   paramList1 <- CEM$covariances # CEM
   paramList2 <- CEI$covariances # CEI

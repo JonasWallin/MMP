@@ -124,15 +124,90 @@ CEM.army <- ce(JSAT ~ 1+TIME,
           data = army2)
 
 summary.ce(CEM.army)
+
+
+
+# null model
+null.army <- ce(JSAT ~ 1+TIME, 
+               ~ 1 | SUBNUM, 
+               ~ 1 + TIME | UNIT, 
+               emergence = ~ 1, 
+               method = "CEM", 
+               # method.team = "OU",
+               data = army2)
+summary.ce(null.army)
+# CEI
+CEI.army <- ce(JSAT ~ 1+TIME, 
+               ~ 1 | SUBNUM, 
+               ~ 1 + TIME | UNIT, 
+               emergence = ~ -1 + TIME, 
+               method = "CEI", 
+               # method.team = "OU",
+               data = army2)
  
-summary.ce(GP.bridge)
+summary.ce(CEI.army)
+
+CEI.army.b <- ce(JSAT ~ 1+TIME, 
+               ~ 1 | SUBNUM, 
+               ~ 1 + TIME | UNIT, 
+               emergence = ~ -1 + TIME, 
+               method = "CEI", 
+               method.team = "OU",
+               data = army2)
+
+summary.ce(CEI.army.b)
+
+# GP
+GP.army <- ce(JSAT ~ 1+TIME, 
+         ~ 1 | SUBNUM, 
+         ~ 1 + TIME | UNIT,
+         emergence = ~ 1, 
+         method = "GP",
+         time = "TIME",
+         data = army2)
+
+summary.ce(GP.army)
+
+## brigde models
+
+CEM.army.b <- ce(JSAT ~ 1+TIME, 
+                 ~ 1 | SUBNUM, 
+                 ~ 1 + TIME | UNIT, 
+                 emergence = ~ 1 + TIME, 
+                 method = "CEM", 
+                 method.team = "OU",
+                 data = army2)
+
+summary.ce(CEM.army.b)
+
+
+CEI.army.b <- ce(JSAT ~ 1+TIME, 
+                 ~ 1 | SUBNUM, 
+                 ~ 1 + TIME | UNIT, 
+                 emergence = ~ -1 + TIME, 
+                 method = "CEI", 
+                 method.team = "OU",
+                 data = army2)
+
+summary.ce(CEI.army.b)
+
+GP.army.b <- ce(JSAT ~ 1+TIME, 
+              ~ 1 | SUBNUM, 
+              ~ 1 + TIME | UNIT,
+              emergence = ~ 1, 
+              method = "GP",
+              time = "TIME",
+              method.team = "OU",
+              data = army2)
+
+summary.ce(GP.army.b)
 
 r.emperical(army2$JSAT,army2$UNIT,army2$TIME)
 
 # r plot
-r.plot(CEM.army, CEI, GP.army, army2$JSAT,army2$UNIT, army2$TIME)
+r.plot(CEM.army, CEI.army, GP.army, army2$JSAT,army2$UNIT, army2$TIME)
  
-# something is wrong, only two obs instead of 3
-smooth.plot(CEM.army, CEI.bridge, GP.bridge, army2$JSAT, army2$TIME, groups.to.plot = c(1,2))
-smooth.plot(CEM.army, CEI, GP.army, army2$JSAT, army2$TIME, groups.to.plot = c(7,8))
+# smoothing plot
+smooth.plot(CEM.army, CEI.army, GP.army, army2$JSAT, army2$TIME, 
+            groups.to.plot = c(1,8))
 
