@@ -145,6 +145,10 @@ expWeightDiag <- R6::R6Class("expWeightDiag", list(
     return(Sigma)
   },
   
+  add_diagonal = function( param, obj, cov_name = 'E'){
+    return( exp(obj[[cov_name]]%*%param))
+  },
+  
   get_mean = function(param, obj){
     m <- rep(0, dim(obj[[cov_name]])[1])
     return(m)

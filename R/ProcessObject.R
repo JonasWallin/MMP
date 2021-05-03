@@ -191,7 +191,7 @@ dataToObject <- function(data_list){
       index <- TeamObj$teams[[i]]$data$indv == indv_i[ii]
 
       TeamObj$teams[[i]]$indv[[ii]]$n = sum(index)
-
+      TeamObj$teams[[i]]$indv[[ii]]$A_list = which(index) 
       TeamObj$teams[[i]]$indv[[ii]]$A      <-  Matrix::sparseMatrix(j = 1:sum(index),
                                                  i = which(index),
                                                  x = rep(1, sum(index)),

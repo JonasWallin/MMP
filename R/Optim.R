@@ -71,15 +71,20 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
         sigmaI <- sigmaI + Obj$indvCovs[[iii]]$get_AtCA(paramList$indv[[iii]], Team_i$indv[[ii]])
         meanI  <- meanI  + Obj$indvCovs[[iii]]$get_Amean(paramList$indv[[iii]], Team_i$indv[[ii]])
       }
-      Sigma_X    <- Sigma_X + Team_i$indv[[ii]]$A%*%sigmaI%*%SparseM::t(Team_i$indv[[ii]]$A)
-      y_i        <- y_i - as.vector(Team_i$indv[[ii]]$A%*%meanI)
+      index_ <- Team_i$indv[[ii]]$A_list
+      #Sigma_X    <- Sigma_X + Team_i$indv[[ii]]$A%*%sigmaI%*%SparseM::t(Team_i$indv[[ii]]$A)
+      Sigma_X[index_,index_]    <- Sigma_X[index_,index_] + sigmaI
+      y_i[index_]        <- y_i[index_] - as.vector(meanI)
     }
     #building the blockmatrix
-    #Sigma_X    <- .bdiag(Sigma_X)
+    #Sigma_X    <- Matrix::.bdiag(Sigma_X)
 
+    #for(iii in 1:length(Obj$errorCovs))
+    #  Sigma_X <- Sigma_X + Obj$errorCovs[[iii]]$get_AtCA(paramList$error[[iii]], Team_i)
+    Sigma_X_d <- rep(0, dim(Sigma_X)[1])
     for(iii in 1:length(Obj$errorCovs))
-      Sigma_X <- Sigma_X + Obj$errorCovs[[iii]]$get_AtCA(paramList$error[[iii]], Team_i)
-
+      Sigma_X_d <- Sigma_X_d + Obj$errorCovs[[iii]]$add_diagonal(paramList$error[[iii]], Team_i)
+    diag(Sigma_X) <- diag(Sigma_X) + Sigma_X_d
     ##
     # team components
     ##
