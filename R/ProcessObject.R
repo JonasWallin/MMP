@@ -220,6 +220,7 @@ dataToObject <- function(data_list){
         COVTI      <- TI[Teams == uTeams[i], , drop=FALSE]
         COVTI_indv <- COVTI[index, , drop=FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$time <- timeTeam[index]
+        TeamObj$teams[[i]]$indv[[ii]]$D    <- COVTI_indv[1,, drop=FALSE]
       }
     }
   }
