@@ -202,7 +202,7 @@ getData <- function(formula1,
     
   } else {
     if(is.null(method.team)==F){
-      if(method.team == "OU"){
+      if(method.team == "OU" || method.team == "OU.homeostasis"){
         timeName <- time
         time <- data[,timeName]
       }

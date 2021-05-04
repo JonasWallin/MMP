@@ -43,6 +43,17 @@ CEM.bridge <- ce(y ~ 1+time,
 
 summary.ce(CEM.bridge)
 CEM.bridge$res
+CEM.homeostasis <- ce(y ~ 1+time, 
+                 ~ 1 | person, 
+                 ~ 1 | group, 
+                 emergence = ~ 1 + time, 
+                 time = "time",
+                 method = "CEM",
+                 method.team = "OU.homeostasis",
+                 data = sherifdat)
+
+summary.ce(CEM.homeostasis)
+
 
 # bridge null model?
 bridge.null <- ce(y ~ 1+time, 

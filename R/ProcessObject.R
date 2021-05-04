@@ -123,6 +123,10 @@ dataToObject <- function(data_list){
     if(method.team == "OU"){
       TeamObj$teamCovs[[count]] <- OU$new()
       count <- count + 1
+    }else if(method.team == "OU.homeostasis"){
+      TeamObj$teamCovs[[count]] <- OU.homeostasis$new(1) # two parameters time and delta
+      count <- count + 1
+      
     }
   }
   
@@ -172,11 +176,13 @@ dataToObject <- function(data_list){
       TeamObj$teams[[i]]$W = as.matrix(WET)[Teams == uTeams[i],, drop = FALSE]
 
     if(is.null(data[["method.team"]])==F){
-      if(method.team == "OU"){
+      if(method.team == "OU" || method.team == "OU.homeostasis"){
         timeTeam                <- time[Teams == uTeams[i]]
         TeamObj$teams[[i]]$time  <- timeTeam
+        TeamObj$teams[[i]]$D    <- as.matrix(timeTeam)
+        
       }
-      }
+    }
     
     TeamObj$teams[[i]]$indv <- list()
     indv_i <-  levels(TeamObj$teams[[i]]$data$indv)
@@ -214,7 +220,6 @@ dataToObject <- function(data_list){
         COVTI      <- TI[Teams == uTeams[i], , drop=FALSE]
         COVTI_indv <- COVTI[index, , drop=FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$time <- timeTeam[index]
-        TeamObj$teams[[i]]$indv[[ii]]$D    <- COVTI_indv[1,, drop=FALSE]
       }
     }
   }
