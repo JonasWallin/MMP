@@ -38,16 +38,38 @@ summary.ce <- function(object) {
   # team GP
   if (!is.null(object$model$`Team process`)) {
     
-    tgp_param <- unlist(object$covariances$team[[2]])
+    # Homeostasis
+    if (object$model$`Team process`=="OU.homeostasis") {
+      
+      tgp_param <- unlist(object$covariances$team[[2]])
+      
+      delta_h <- tgp_param[1]
+      sigma <- exp(tgp_param[length(tgp_param)-1])
+      theta <- exp(tgp_param[length(tgp_param)])
+      
+      
+      tgp_mat <- matrix(c(delta_h,sigma,theta),
+                        dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+      
+    }
     
-    sigma <- exp(tgp_param[1])
-    theta <- exp(tgp_param[2])
+    # old team GP
+    if (object$model$`Team process`=="OU") {
+      tgp_param <- unlist(object$covariances$team[[2]])
+      
+      sigma <- exp(tgp_param[1])
+      theta <- exp(tgp_param[2])
+      
+      
+      tgp_mat <- matrix(c(sigma,theta),
+                        dimnames = list(c("sigma","theta"),"Estimate"))
+      
+    }
     
-    
-    tgp_mat <- matrix(c(sigma,theta),
-                      dimnames = list(c("sigma","theta"),"Estimate"))
   
   }
+  
+  
   # emergence
   em <- as.character(object$model$`Emergence model`[1]) # formula
   em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
@@ -128,18 +150,36 @@ summary.ce <- function(object) {
       # team GP
     if (!is.null(object$model$`Team process`)) {
       
-    tgp_param <- unlist(object$covariances$team[[2]])
-    
-    sigma <- exp(tgp_param[1])
-    theta <- exp(tgp_param[2])
-    
- 
-    tgp_mat <- matrix(c(sigma,theta),
-                       dimnames = list(c("sigma","theta"),"Estimate"))
-
+      # Homeostasis
+      if (object$model$`Team process`=="OU.homeostasis") {
+        
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        delta_h <- tgp_param[1]
+        sigma <- exp(tgp_param[length(tgp_param)-1])
+        theta <- exp(tgp_param[length(tgp_param)])
+        
+        
+        tgp_mat <- matrix(c(delta_h,sigma,theta),
+                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        
+      }
+      
+      # old team GP
+      if (object$model$`Team process`=="OU") {
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        sigma <- exp(tgp_param[1])
+        theta <- exp(tgp_param[2])
+        
+        
+        tgp_mat <- matrix(c(sigma,theta),
+                          dimnames = list(c("sigma","theta"),"Estimate"))
+        
+      }
+      
+      
     }
-    
-    
     
   } else if (model == "GP") {
     
@@ -179,15 +219,36 @@ summary.ce <- function(object) {
     # team GP
     if (!is.null(object$model$`Team process`)) {
       
-      tgp_param <- unlist(object$covariances$team[[2]])
+      # Homeostasis
+      if (object$model$`Team process`=="OU.homeostasis") {
+        
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        delta_h <- tgp_param[1]
+        sigma <- exp(tgp_param[length(tgp_param)-1])
+        theta <- exp(tgp_param[length(tgp_param)])
+        
+        
+        tgp_mat <- matrix(c(delta_h,sigma,theta),
+                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        
+      }
       
-      sigma <- exp(tgp_param[1])
-      theta <- exp(tgp_param[2])
+      # old team GP
+      if (object$model$`Team process`=="OU") {
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        sigma <- exp(tgp_param[1])
+        theta <- exp(tgp_param[2])
+        
+        
+        tgp_mat <- matrix(c(sigma,theta),
+                          dimnames = list(c("sigma","theta"),"Estimate"))
+        
+      }
       
       
-      tgp_mat <- matrix(c(sigma,theta),
-                        dimnames = list(c("sigma","theta"),"Estimate"))
-    }
+    } 
     # emergence GP
     
     
