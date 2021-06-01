@@ -100,7 +100,8 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
     ##
     # computing likelihood
     # lik = -0.5 * y^T (Sigma^-1 y)
-
+    print(paramList)
+    print(param)
     Sigma12invY <- solve(t(L),y_i)
     lik <- lik -0.5 * as.matrix(t(Sigma12invY)%*%Sigma12invY)
 

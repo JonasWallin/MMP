@@ -49,19 +49,19 @@ ce <- function(formula1,
   res <-optim(res$par, function(x){-loglik(x, object) })
   
     if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      res <-optim(res$par, function(x){-loglik(x, object) },control = list(maxit=5000))
       if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      res <-optim(res$par, function(x){-loglik(x, object) })
       }
     }
   
   } else {
     res <-optim(param, function(x){-loglik(x, object) })
-    res <-optim(res$par, function(x){-loglik(x, object) })
+    res <-optim(res$par, function(x){-loglik(x, object) },control = list(maxit=5000))
     if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+      res <-optim(res$par, function(x){-loglik(x, object) })
       if (res$convergence != 0) {
-        res <-optim(res$par, function(x){-loglik(x, object) }, method = "BFGS")
+        res <-optim(res$par, function(x){-loglik(x, object) })
       }
     }
   }

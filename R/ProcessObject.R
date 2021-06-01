@@ -149,7 +149,8 @@ dataToObject <- function(data_list){
     }
   }
   if(is.null(TI)==F){
-    TeamObj$indvCovs[[count]] <- OUbridge$new(min(time), max(time), dim(TI)[2])
+    TeamObj$indvCovs[[count]] <- OU.homeostasis$new(1) # two parameters time and delta 
+    #OUbridge$new(min(time), max(time), dim(TI)[2])
     count <- count + 1
   }
 
@@ -220,7 +221,8 @@ dataToObject <- function(data_list){
         COVTI      <- TI[Teams == uTeams[i], , drop=FALSE]
         COVTI_indv <- COVTI[index, , drop=FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$time <- timeTeam[index]
-        TeamObj$teams[[i]]$indv[[ii]]$D    <- COVTI_indv[1,, drop=FALSE]
+        #TeamObj$teams[[i]]$indv[[ii]]$D    <- COVTI_indv[1,, drop=FALSE]
+        TeamObj$teams[[i]]$indv[[ii]]$D     <- as.matrix(timeTeam[index])
       }
     }
   }
