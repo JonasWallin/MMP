@@ -1,0 +1,121 @@
+## Simulate type I consensus (CEM type)
+
+gendat_I <- function(l3n,l2n,l1n,
+                   mu0,mu1, # fixed effects
+                   sg00,sg11,sg01, # group var-cov
+                   sp, # individual variance
+                   se, # error variance
+                   delta1){
+  dat=expand.grid(time = 0:(l1n-1),
+                  person = 1:l2n,
+                  group = 1:l3n)
+  g <- MASS::mvrnorm(l3n, c(mu0,mu1), matrix( c(sg00,sg01,sg01,sg11), 2) )
+  dat$g1<-g[,1][dat[,3]]
+  dat$g2<-g[,2][dat[,3]]
+  dat$g <- dat$g1+dat$g2*dat$time
+  dat$p0 <- rep(rnorm(l3n*l2n,0,sd=sqrt(sp)), each=l1n)
+  dat$p<- rnorm(l3n*l2n*l1n,dat$p0+dat$g,sd=sqrt(se*exp(2*delta1*dat$time)))
+  
+  # return
+  return(dat)
+}
+
+
+## generates ce type II
+gendat_II <- function(l3n,l2n,l1n,
+                   mu0,mu1, # fixed effects
+                   sg00,sg11,sg01, # group var-cov
+                   sp, # individual variance
+                   se, # error variance
+                   delta1){
+  dat=expand.grid(time = 0:(l1n-1),
+                  person = 1:l2n,
+                  group = 1:l3n)
+  g <- MASS::mvrnorm(l3n, c(mu0,mu1), matrix( c(sg00,sg01,sg01,sg11), 2) )
+  dat$g1<-g[,1][dat[,3]]
+  dat$g2<-g[,2][dat[,3]]
+  dat$g <- dat$g1+dat$g2*dat$time
+  dat$p<- rnorm(l3n*l2n*l1n,dat$g,sd=sqrt(sp*exp(2*delta1*dat$time)))
+  dat$y<- rnorm(l3n*l2n*l1n,dat$p,sd=sqrt(se))
+
+  # return
+  return(dat)
+}
+
+set.seed(123)
+# data type I ce
+## same values as used in Lang et al 2019 except for sp and se,
+## changed so total variance should be the same (?)
+data_I <- gendat_I(l3n=5,l2n=5,l1n=10,
+                   mu0=3,mu1=0.01,
+                   sg00=0.05,sg11=0.005,sg01=-0.005, 
+                   sp=0.1,
+                   se=0.2,
+                   delta1=-0.25)
+
+# data type II ce
+data_II <- gendat_II(l3n=5,l2n=5,l1n=10,
+                   mu0=3,mu1=0.01,
+                   sg00=0.05,sg11=0.005,sg01=-0.005,
+                   sp=0.2,
+                   se=0.1,
+                   delta1=-0.25)
+
+## ce type I, cei model
+cei_I <- ce(p ~ 1+time, 
+          ~ 1 | person, 
+          ~ 1 + time | group, 
+          emergence = ~ -1 + time, 
+          method = "CEI", 
+          data = data_I)
+
+summary.ce(cei_I)
+
+## ce type I, cem model 
+cem_I <- ce(p ~ 1+time, 
+          ~ 1 | person, 
+          ~ 1 + time | group, 
+          emergence = ~ 1 + time, 
+          method = "CEM", 
+          data = data_I)
+
+# error in solve.default(t(L), y_i) : 
+# system is computationally singular: reciprocal condition number = 2.48091e-23 
+
+
+# same analysis with nlme (works fine)
+library(nlme)
+
+cem_lme_I <- lme(p~time, 
+    random = list(group=pdLogChol(~time),
+                  person=pdIdent(~1)),
+    data=data_I, weights=varExp(form =~time))
+
+summary(cem_lme_I)
+
+## ce type II, cei model
+cei_II <- ce(y ~ 1+time, 
+            ~ 1 | person, 
+            ~ 1 + time | group, 
+            emergence = ~ -1 + time, 
+            method = "CEI", 
+            data = data_II)
+summary.ce(cei_II)
+# get delta=-26.58804, something is off
+
+cem_II <- ce(y ~ 1+time, 
+            ~ 1 | person, 
+            ~ 1 + time | group, 
+            emergence = ~ 1 + time, 
+            method = "CEM", 
+            data = data_II)
+summary.ce(cem_II)
+
+cem_lme_II <- lme(y~time, 
+                 random = list(group=pdLogChol(~time),
+                               person=pdIdent(~1)),
+                 data=data_II,
+                 weights=varExp(form =~time))
+
+summary(cem_lme_II)
+## gives similar results
