@@ -11,8 +11,8 @@ summary.ce <- function(object) {
   fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
   fe_param <- object$betas
   
-  fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-  dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+  fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+  dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
   
   ## random effects
   # individual
@@ -90,8 +90,8 @@ summary.ce <- function(object) {
     fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
     fe_param <- object$betas
     
-    fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+    fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
     
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
@@ -188,8 +188,8 @@ summary.ce <- function(object) {
     fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
     fe_param <- object$betas
     
-    fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+    fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
     
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
