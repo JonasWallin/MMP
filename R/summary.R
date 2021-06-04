@@ -43,13 +43,13 @@ summary.ce <- function(object) {
       
       tgp_param <- unlist(object$covariances$team[[2]])
       
-      delta_h <- tgp_param[1]
+      delta2 <- tgp_param[1]
       sigma <- exp(tgp_param[length(tgp_param)-1])
       theta <- exp(tgp_param[length(tgp_param)])
       
       
-      tgp_mat <- matrix(c(delta_h,sigma,theta),
-                        dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+      tgp_mat <- matrix(c(delta2,sigma,theta),
+                        dimnames = list(c("delta2","sigma","theta"),"Estimate"))
       
     }
     
@@ -155,13 +155,13 @@ summary.ce <- function(object) {
         
         tgp_param <- unlist(object$covariances$team[[2]])
         
-        delta_h <- tgp_param[1]
+        delta2 <- tgp_param[1]
         sigma <- exp(tgp_param[length(tgp_param)-1])
         theta <- exp(tgp_param[length(tgp_param)])
         
         
-        tgp_mat <- matrix(c(delta_h,sigma,theta),
-                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        tgp_mat <- matrix(c(delta2,sigma,theta),
+                          dimnames = list(c("delta2","sigma","theta"),"Estimate"))
         
       }
       
@@ -224,13 +224,13 @@ summary.ce <- function(object) {
         
         tgp_param <- unlist(object$covariances$team[[2]])
         
-        delta_h <- tgp_param[1]
+        delta2 <- tgp_param[1]
         sigma <- exp(tgp_param[length(tgp_param)-1])
         theta <- exp(tgp_param[length(tgp_param)])
         
         
-        tgp_mat <- matrix(c(delta_h,sigma,theta),
-                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        tgp_mat <- matrix(c(delta2,sigma,theta),
+                          dimnames = list(c("delta2","sigma","theta"),"Estimate"))
         
       }
       
@@ -259,7 +259,7 @@ summary.ce <- function(object) {
     em_param <- unlist(object$covariances$indv[[2]])
     n_param <- length(em_param)
     
-    beta_delta <- em_param[1]
+    delta1 <- em_param[1]
     sigma <- exp(em_param[n_param-1])
     theta <- exp(em_param[n_param])
     
@@ -267,11 +267,11 @@ summary.ce <- function(object) {
       
       additional_param <- em_param[2:(n_param-2)]
       
-      em_mat <- matrix(c(beta_delta,sigma,theta, additional_param),
-                       dimnames = list(c("beta_delta","sigma","theta",em_names),"Estimate"))
+      em_mat <- matrix(c(delta1,sigma,theta, additional_param),
+                       dimnames = list(c("delta1","sigma","theta",em_names),"Estimate"))
     } else {
-      em_mat <- matrix(c(beta_delta,sigma,theta),
-                       dimnames = list(c("beta_delta","sigma","theta"),"Estimate"))
+      em_mat <- matrix(c(delta1,sigma,theta),
+                       dimnames = list(c("delta1","sigma","theta"),"Estimate"))
     }
   }
     
