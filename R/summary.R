@@ -331,3 +331,18 @@ summary.ce <- function(object) {
   
 }
 
+## Akaike weight
+
+# relative likelihood of the model:
+# exp(-0.5*DELTA(AIC))
+# Akaike weight = relative likelihood/sum(relative likelihoods)
+
+akaike.weight <- function(models, names) {
+  # models: a list
+  # names: a vector of names of the models
+  dat <- data.frame(names, AIC = sapply(models, function(i) i$AIC))
+  dat$deltaAIC <- dat$AIC - min(dat$AIC)
+  dat$rellik <- exp(-0.5*dat$deltaAIC)
+  dat$weight <- dat$rellik/sum(dat$rellik)
+  return(dat)
+}

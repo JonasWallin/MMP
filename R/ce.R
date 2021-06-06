@@ -76,6 +76,12 @@ ce <- function(formula1,
   
   loglik <- -res$value
   
+  # AIC: 2*k - 2*loglik, k = number of estimated parameters 
+  k <- sum(length(paramPlot),
+           length(betas))
+  
+  aic <- (2*k)-(2*loglik)
+  
   ce_model <- list(model, 
                    loglik,
                    betas, 
@@ -84,7 +90,8 @@ ce <- function(formula1,
                    n,
                    object,
                    paramPlot,
-                   res)
+                   res,
+                   aic)
   
   names(ce_model) <- c("model",
                        "loglik",
@@ -94,7 +101,8 @@ ce <- function(formula1,
                        "n",
                        "object",
                        "unlisted_covariances",
-                       "res")
+                       "res",
+                       "AIC")
   
   # create class
     class(ce_model) <- "ce"
