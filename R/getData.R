@@ -171,7 +171,7 @@ getData <- function(formula1,
     
   } else if(method== "CEM2")
     WII <- ceMf
-  else if (method == "CEI") {
+  else if (method == "CEI" || method == "CEI2") {
     
     WEI <- ceMf
     

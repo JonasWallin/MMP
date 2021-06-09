@@ -44,6 +44,8 @@ dataToObject <- function(data_list){
     WLI <- T
   } else if (method == "CEM2"){
     WLI <- T
+  } else if (method == "CEI2"){
+    WLI <- T
   } else if (method == "GP"){
     WLI <- T
   } else {

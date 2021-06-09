@@ -19,7 +19,12 @@ CEM2 <- ce(y ~ 1+time,
                emergence = ~ 1 + time, 
                method = "CEM2", 
                data = sherifdat)
-
+CEI2 <- ce(y ~ 1+time, 
+           ~ 1 | person, 
+           ~ 1 + time | group, 
+           emergence = ~ 1 + time, 
+           method = "CEI2", 
+           data = sherifdat)
 
 # recreate CEM from Lang et al bookchapter
 CEM <- ce(y ~ 1+time, 
