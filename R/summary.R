@@ -11,8 +11,8 @@ summary.ce <- function(object) {
   fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
   fe_param <- object$betas
   
-  fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-  dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+  fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+  dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
   
   ## random effects
   # individual
@@ -43,13 +43,13 @@ summary.ce <- function(object) {
       
       tgp_param <- unlist(object$covariances$team[[2]])
       
-      delta_h <- tgp_param[1]
+      delta2 <- tgp_param[1]
       sigma <- exp(tgp_param[length(tgp_param)-1])
       theta <- exp(tgp_param[length(tgp_param)])
       
       
-      tgp_mat <- matrix(c(delta_h,sigma,theta),
-                        dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+      tgp_mat <- matrix(c(delta2,sigma,theta),
+                        dimnames = list(c("delta2","sigma","theta"),"Estimate"))
       
     }
     
@@ -90,8 +90,8 @@ summary.ce <- function(object) {
     fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
     fe_param <- object$betas
     
-    fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+    fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
     
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
@@ -155,13 +155,13 @@ summary.ce <- function(object) {
         
         tgp_param <- unlist(object$covariances$team[[2]])
         
-        delta_h <- tgp_param[1]
+        delta2 <- tgp_param[1]
         sigma <- exp(tgp_param[length(tgp_param)-1])
         theta <- exp(tgp_param[length(tgp_param)])
         
         
-        tgp_mat <- matrix(c(delta_h,sigma,theta),
-                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        tgp_mat <- matrix(c(delta2,sigma,theta),
+                          dimnames = list(c("delta2","sigma","theta"),"Estimate"))
         
       }
       
@@ -188,8 +188,8 @@ summary.ce <- function(object) {
     fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
     fe_param <- object$betas
     
-    fe_mat <- cbind(fe_param,diag(t(object$cov_beta)))
-    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Variance"))
+    fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
     
     fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
     
@@ -224,13 +224,13 @@ summary.ce <- function(object) {
         
         tgp_param <- unlist(object$covariances$team[[2]])
         
-        delta_h <- tgp_param[1]
+        delta2 <- tgp_param[1]
         sigma <- exp(tgp_param[length(tgp_param)-1])
         theta <- exp(tgp_param[length(tgp_param)])
         
         
-        tgp_mat <- matrix(c(delta_h,sigma,theta),
-                          dimnames = list(c("delta_h","sigma","theta"),"Estimate"))
+        tgp_mat <- matrix(c(delta2,sigma,theta),
+                          dimnames = list(c("delta2","sigma","theta"),"Estimate"))
         
       }
       
@@ -259,7 +259,7 @@ summary.ce <- function(object) {
     em_param <- unlist(object$covariances$indv[[2]])
     n_param <- length(em_param)
     
-    beta_delta <- em_param[1]
+    delta1 <- em_param[1]
     sigma <- exp(em_param[n_param-1])
     theta <- exp(em_param[n_param])
     
@@ -267,11 +267,11 @@ summary.ce <- function(object) {
       
       additional_param <- em_param[2:(n_param-2)]
       
-      em_mat <- matrix(c(beta_delta,sigma,theta, additional_param),
-                       dimnames = list(c("beta_delta","sigma","theta",em_names),"Estimate"))
+      em_mat <- matrix(c(delta1,sigma,theta, additional_param),
+                       dimnames = list(c("delta1","sigma","theta",em_names),"Estimate"))
     } else {
-      em_mat <- matrix(c(beta_delta,sigma,theta),
-                       dimnames = list(c("beta_delta","sigma","theta"),"Estimate"))
+      em_mat <- matrix(c(delta1,sigma,theta),
+                       dimnames = list(c("delta1","sigma","theta"),"Estimate"))
     }
   }
     
@@ -331,3 +331,18 @@ summary.ce <- function(object) {
   
 }
 
+## Akaike weight
+
+# relative likelihood of the model:
+# exp(-0.5*DELTA(AIC))
+# Akaike weight = relative likelihood/sum(relative likelihoods)
+
+akaike.weight <- function(models, names) {
+  # models: a list
+  # names: a vector of names of the models
+  dat <- data.frame(names, AIC = sapply(models, function(i) i$AIC))
+  dat$deltaAIC <- dat$AIC - min(dat$AIC)
+  dat$rellik <- exp(-0.5*dat$deltaAIC)
+  dat$weight <- dat$rellik/sum(dat$rellik)
+  return(dat)
+}

@@ -92,6 +92,20 @@ CEI.bridge <- ce(y ~ 1+time,
 summary.ce(CEI.bridge)
 CEI.bridge$res$convergence
 
+# CEI homeostasis
+CEI.h <- ce(y ~ 1+time, 
+                 ~ 1 | person, 
+                 ~ 1 | group, 
+                 emergence = ~ -1 + time, # 1 inkluderar "indivudal baseline variance"
+                 time = "time",
+                 method = "CEI", 
+                 method.team = "OU.homeostasis",
+                 data = sherifdat)
+
+summary.ce(CEI.h)
+# residual variance
+exp(CEI.h$unlisted_covariances[1])
+
 ## Adjusted CEM
 CEI <- ce(y ~ 1+time, 
           ~ 1 | person, 
@@ -115,6 +129,7 @@ GP <- ce(y ~ 1+time,
 
 summary.ce(GP)
 GP$res
+exp(GP$unlisted_covariances[1])
 
 # GP bridge
 GP.bridge <- ce(y ~ 1+time, 
@@ -129,9 +144,23 @@ GP.bridge <- ce(y ~ 1+time,
 summary.ce(GP.bridge)
 GP.bridge$res
 
+
+# GP homeostasis
+GP.h <- ce(y ~ 1+time, 
+                ~ 1 | person, 
+                ~ 1 | group, 
+                emergence = ~ 1, 
+                method = "GP",
+                method.team = "OU.homeostasis",
+                time = "time",
+                data = sherifdat)
+summary.ce(GP.h)
+# residual variance
+exp(GP.h$unlisted_covariances[1])
+
 # r plot
 r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
-r.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y,sherifdat$group, sherifdat$time)
+r.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
 
 smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
-smooth.plot(CEM.bridge, CEI.bridge, GP.bridge, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
+smooth.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
