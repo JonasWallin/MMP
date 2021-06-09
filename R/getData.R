@@ -161,6 +161,7 @@ getData <- function(formula1,
   WEI <- NULL
   WET <- NULL 
   TI <- NULL
+  WII <- NULL
   wNOISE <- NULL
   
   
@@ -168,7 +169,9 @@ getData <- function(formula1,
     
     wNOISE <- ceMf
     
-  } else if (method == "CEI") {
+  } else if(method== "CEM2")
+    WII <- ceMf
+  else if (method == "CEI") {
     
     WEI <- ceMf
     
@@ -217,36 +220,23 @@ getData <- function(formula1,
                     "Team random effects", 
                     "Emergence")
   
-  matrices <- list(y, 
-                   Xf, 
-                   XI, 
-                   indv, 
-                   XT, 
-                   team, 
-                   WEI, 
-                   WET, 
-                   TI, 
-                   time, 
-                   wNOISE,
-                   names,
-                   method,
-                   method.team)
+  matrices <- list(y = y, 
+                   Xf = Xf, 
+                   XI = XI, 
+                   indv        = indv, 
+                   XT          = XT, 
+                   team        = team, 
+                   WEI         = WEI, 
+                   WET         = WET,
+                   WII         = WII,
+                   TI          = TI, 
+                   time        = time, 
+                   wNOISE      = wNOISE,
+                   names       = names,
+                   method      = method,
+                   method.team = method.team)
   
-  names(matrices) <- c("y", 
-                       "Xf", 
-                       "XI", 
-                       "indv", 
-                       "XT", 
-                       "team", 
-                       "WEI", 
-                       "WET", 
-                       "TI", 
-                       "time", 
-                       "wNOISE",
-                       "names",
-                       "method",
-                       "method.team")
-  
+
   return(matrices)
   
 }

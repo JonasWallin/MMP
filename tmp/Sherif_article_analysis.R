@@ -10,6 +10,17 @@ sherifdat <- subset(sherifdat, time <= 2)
 sherifdat$time <- sherifdat$time + 1
 #sherifdat$y <- sherifdat$y.centered
 
+
+
+
+CEM2 <- ce(y ~ 1+time, 
+               ~ 1 | person, 
+               ~ 1 + time | group, 
+               emergence = ~ 1 + time, 
+               method = "CEM2", 
+               data = sherifdat)
+
+
 # recreate CEM from Lang et al bookchapter
 CEM <- ce(y ~ 1+time, 
           ~ 1 | person, 

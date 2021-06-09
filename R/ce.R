@@ -21,22 +21,13 @@ ce <- function(formula1,
   
   n <- length(unlist(data[1]))
   
-  model <- list(list(formula1,data$names[1]), 
-                list(formula2,data$names[2]), 
-                list(formula3,data$names[3]), 
-                list(emergence,data$names[4]),
-                method,
-                method.team,
-                time)
-  
-  names(model) <- c("Fixed effects", 
-                    "Individual random effects", 
-                    "Team random effects",
-                    "Emergence model",
-                    "Method",
-                    "Team process",
-                    "Time")
-  
+  model <- list('Fixed effects'             = list(formula1,data$names[1]), 
+                'Individual random effects' = list(formula2,data$names[2]), 
+                'Team random effects'       = list(formula3,data$names[3]), 
+                'Emergence model'           = list(emergence,data$names[4]),
+                'Method'                    = method,
+                'Team process'              = method.team,
+                'Time'                      = time)
   
   
   object <- dataToObject(data)

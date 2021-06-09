@@ -13,6 +13,7 @@
 #' WLI       - linear weighting individual effect # döp om, ta bort weighting sen
 #' WLT       - linear weighting team effect
 #' WEI       - exponential weighting individual effect
+#' WII       - independent weighting of inidvual effect 
 #' WET       - exponential weighting team effect
 #' TI        -  n_indv x p (time individual effect (covariance model) requires time)
 #' time      - (n x 1) time point of observations
@@ -41,6 +42,8 @@ dataToObject <- function(data_list){
   
   if (method == "CEM") {
     WLI <- T
+  } else if (method == "CEM2"){
+    WLI <- T
   } else if (method == "GP"){
     WLI <- T
   } else {
@@ -55,8 +58,13 @@ dataToObject <- function(data_list){
     WEI <- data[["WEI"]]
   }
   
+  if (is.null(data[["WII"]]) == F) {
+    WII <- as.matrix(data[["WII"]])
+  } else {
+    WII <- data[["WII"]]
+  }
   if (is.null(data[["WET"]]) == F) {
-  WET <- as.matrix(data[["WET"]])
+    WET <- as.matrix(data[["WET"]])
   } else {
     WET <- data[["WET"]]
   }
@@ -74,7 +82,7 @@ dataToObject <- function(data_list){
   }
   
   if (is.null(data[["wNOISE"]]) == F) {
-  wNOISE <- as.matrix(data[["wNOISE"]])
+    wNOISE <- as.matrix(data[["wNOISE"]])
   } else {
     wNOISE <- (data[["wNOISE"]])
   }
@@ -148,6 +156,11 @@ dataToObject <- function(data_list){
       count <- count + 1
     }
   }
+  if(is.null(WII)==F){
+    TeamObj$indvCovs[[count]] <- expWeightDiag$new(dim(WII)[2])
+    #OUbridge$new(min(time), max(time), dim(TI)[2])
+    count <- count + 1
+  }
   if(is.null(TI)==F){
     TeamObj$indvCovs[[count]] <- OU.homeostasis$new(1) # two parameters time and delta 
     #OUbridge$new(min(time), max(time), dim(TI)[2])
@@ -214,6 +227,11 @@ dataToObject <- function(data_list){
       if(is.null(WEI)==F){
         wIt <- as.matrix(WEI)[Teams == uTeams[i],, drop = FALSE]
         TeamObj$teams[[i]]$indv[[ii]]$W =as.matrix(wIt)[index,, drop = FALSE]
+      }
+      if(is.null(WII)==F){
+        WIIt <-  as.matrix(WII)[Teams == uTeams[i],, drop = FALSE]
+        TeamObj$teams[[i]]$indv[[ii]]$E = as.matrix(WIIt)[index,, drop = FALSE]
+        
       }
       #is there is a time series component
       if(is.null(TI)==F){
