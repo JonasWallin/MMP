@@ -83,6 +83,84 @@ summary.ce <- function(object) {
                      dimnames = list(c("sigma^2",em_names[-1]),"Estimate"))
   }
   
+  if (model == "CEM2") {
+    ## fixed effects
+    fe <- as.character(object$model$`Fixed effects`[1]) # formula
+    fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
+    fe_param <- object$betas
+    
+    fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+    dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
+    
+    ## random effects
+    # individual
+    
+    # individual P_ij^0 (and other covariates)
+    
+    ire <- as.character(object$model$`Individual random effects`[1]) # formula
+    ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
+    
+    ire_param <- unlist(object$covariances$indv[[1]])
+    ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
+    dimnames(ire_mat) <- list(ire_names,ire_names)
+    
+    # team
+    
+    tre <- as.character(object$model$`Team random effects`[1]) # formula
+    tre_names <- unlist(object$model$`Team random effects`[2]) # names of covariates
+    
+    tre_param <- unlist(object$covariances$team[1])
+    tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
+    dimnames(tre_mat) <- list(tre_names,tre_names)
+    
+    # team GP
+    if (!is.null(object$model$`Team process`)) {
+      
+      # Homeostasis
+      if (object$model$`Team process`=="OU.homeostasis") {
+        
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        delta2 <- tgp_param[1]
+        sigma <- exp(tgp_param[length(tgp_param)-1])
+        theta <- exp(tgp_param[length(tgp_param)])
+        
+        
+        tgp_mat <- matrix(c(delta2,sigma,theta),
+                          dimnames = list(c("delta2","sigma","theta"),"Estimate"))
+        
+      }
+      
+      # old team GP
+      if (object$model$`Team process`=="OU") {
+        tgp_param <- unlist(object$covariances$team[[2]])
+        
+        sigma <- exp(tgp_param[1])
+        theta <- exp(tgp_param[2])
+        
+        
+        tgp_mat <- matrix(c(sigma,theta),
+                          dimnames = list(c("sigma","theta"),"Estimate"))
+        
+      }
+      
+      
+    }
+    
+    
+    # emergence
+    em <- as.character(object$model$`Emergence model`[1]) # formula
+    em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
+    
+    em_param <- unlist(object$covariances$indv[2])
+    
+    sigma2 <- exp(em_param[1])
+    delta_param <- em_param[-1]/2
+    
+    em_mat <- matrix(c(sigma2, delta_param), 
+                     dimnames = list(c("sigma_e^2",em_names[-1]),"Estimate"))
+  }
+  
   else if (model == "CEI") {
     
     ## fixed effects
@@ -105,33 +183,27 @@ summary.ce <- function(object) {
     em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
     
     em_param <- unlist(object$covariances$indv)[1:length(em_names)]
-    
-    if (em_names[1]=="(Intercept)"){    
-      indv_baseline <- em_param[1] # tror rätt men inte hundra
-      
-      delta_param <- em_param[-1] 
-      
-      
-      em_mat <- matrix(c(indv_baseline, delta_param), 
-                       dimnames = list(c("individual baseline variance", em_names[-1]),"Estimate"))
-    } else {
-      delta_param <- em_param 
-      
-      
-      em_mat <- matrix(delta_param, 
-                       dimnames = list(em_names,"Estimate"))
-    }
+    sigma_p2 <- unlist(object$covariances$indv)[(length(em_names)+1)]
+    em_param <- c(em_param,as.matrix(nlme::pdLogChol(sigma_p2)))
+
+    em_mat <- matrix(em_param, 
+                       dimnames = list(c(em_names,"sigma_p^2"),"Estimate"))
+
     
     # individual
+    
     
     ire <- as.character(object$model$`Individual random effects`[1]) # formula
     ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
     
     n_indv_param <- length(unlist(object$covariances$indv))
-    
+    if (n_indv_param > length(em_param)) {
     ire_param <- unlist(object$covariances$indv)[(length(em_names)+1):n_indv_param]
     ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
     dimnames(ire_mat) <- list(ire_names,ire_names)
+    } else {
+      ire_mat <- "NULL"
+    }
     
     # sigma_u 
     
@@ -180,6 +252,92 @@ summary.ce <- function(object) {
       
       
     }
+    
+    } else if (model == "CEI2") {
+      
+      ## fixed effects
+      fe <- as.character(object$model$`Fixed effects`[1]) # formula
+      fe_names <- unlist(object$model$`Fixed effects`[2]) # names of covariates
+      fe_param <- object$betas
+      
+      fe_mat <- cbind(fe_param,sqrt(diag(t(object$cov_beta))))
+      dimnames(fe_mat) <- list(fe_names,c("Estimate", "Std.error"))
+      
+      fe_measurement_error <- exp(unlist(object$covariances$error)) # do we want to print this?
+      
+      ## random effects
+      # individual
+      
+      
+      # emergence (on individual level for CEI2)
+      
+      em <- as.character(object$model$`Emergence model`[1]) # formula
+      em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
+      
+      em_param <- unlist(object$covariances$indv)[1:length(em_names)]
+      sigma_p2 <- unlist(object$covariances$indv)[(length(em_names)+1)]
+      em_param <- c(em_param,as.matrix(nlme::pdLogChol(sigma_p2)))
+      
+      em_mat <- matrix(em_param, 
+                       dimnames = list(c(em_names,"sigma_p^2"),"Estimate"))
+      
+      
+
+      # individual P_ij^0 (and other covariates)
+      
+      ire <- as.character(object$model$`Individual random effects`[1]) # formula
+      ire_names <- unlist(object$model$`Individual random effects`[2]) # names of covariates
+      
+      ire_param <- unlist(object$covariances$indv[[1]])
+      ire_mat <- as.matrix(nlme::pdLogChol(ire_param))
+      dimnames(ire_mat) <- list(ire_names,ire_names)
+      
+      
+      
+      # team
+      # random effects
+      
+      tre <- as.character(object$model$`Team random effects`[1]) # formula
+      tre_names <- unlist(object$model$`Team random effects`[2]) # names of covariates
+      
+      tre_param <- unlist(object$covariances$team[1])
+      tre_mat <- as.matrix(nlme::pdLogChol(tre_param))
+      
+      dimnames(tre_mat) <- list(tre_names,tre_names)
+      
+      # team GP
+      if (!is.null(object$model$`Team process`)) {
+        
+        # Homeostasis
+        if (object$model$`Team process`=="OU.homeostasis") {
+          
+          tgp_param <- unlist(object$covariances$team[[2]])
+          
+          delta2 <- tgp_param[1]
+          sigma <- exp(tgp_param[length(tgp_param)-1])
+          theta <- exp(tgp_param[length(tgp_param)])
+          
+          
+          tgp_mat <- matrix(c(delta2,sigma,theta),
+                            dimnames = list(c("delta2","sigma","theta"),"Estimate"))
+          
+        }
+        
+        # old team GP
+        if (object$model$`Team process`=="OU") {
+          tgp_param <- unlist(object$covariances$team[[2]])
+          
+          sigma <- exp(tgp_param[1])
+          theta <- exp(tgp_param[2])
+          
+          
+          tgp_mat <- matrix(c(sigma,theta),
+                            dimnames = list(c("sigma","theta"),"Estimate"))
+          
+        }
+        
+        
+      }
     
   } else if (model == "GP") {
     
