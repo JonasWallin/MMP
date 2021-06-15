@@ -12,6 +12,12 @@ sherifdat$time <- sherifdat$time + 1
 
 
 
+null <- ce(y ~ 1+time, 
+           ~ 1 | person, 
+           ~ 1 + time | group, 
+           emergence = ~ 1, 
+           method = "CEM2", 
+           data = sherifdat)
 
 CEM2 <- ce(y ~ 1+time, 
                ~ 1 | person, 
@@ -22,107 +28,9 @@ CEM2 <- ce(y ~ 1+time,
 CEI2 <- ce(y ~ 1+time, 
            ~ 1 | person, 
            ~ 1 + time | group, 
-           emergence = ~ 1 + time, 
+           emergence = ~ -1 + time, # to only extend with P_ij^0, still keep -1
            method = "CEI2", 
            data = sherifdat)
-
-# recreate CEM from Lang et al bookchapter
-CEM <- ce(y ~ 1+time, 
-          ~ 1 | person, 
-          ~ 1 + time | group, 
-          emergence = ~ 1 + time, 
-          method = "CEM", 
-          data = sherifdat)
-
-summary.ce(CEM)
-CEM$res$convergence
-CEM$res
-
-CEM.null <- ce(y ~ 1+time, 
-          ~ 1 | person, 
-          ~ 1 + time | group, 
-          emergence = ~ 1, 
-          method = "CEM", 
-          data = sherifdat)
-
-summary.ce(CEM.null)
-CEM.null$res
-
-CEM.bridge <- ce(y ~ 1+time, 
-          ~ 1 | person, 
-          ~ 1 | group, 
-          emergence = ~ 1 + time, 
-          time = "time",
-          method = "CEM",
-          method.team = "OU",
-          data = sherifdat)
-
-summary.ce(CEM.bridge)
-CEM.bridge$res
-CEM.homeostasis <- ce(y ~ 1+time, 
-                 ~ 1 | person, 
-                 ~ 1 | group, 
-                 emergence = ~ 1 + time, 
-                 time = "time",
-                 method = "CEM",
-                 method.team = "OU.homeostasis",
-                 data = sherifdat)
-
-summary.ce(CEM.homeostasis)
-
-
-# bridge null model?
-bridge.null <- ce(y ~ 1+time, 
-                 ~ 1 | person, 
-                 ~ 1 | group, 
-                 emergence = ~ 1, 
-                 time = "time",
-                 method = "CEM",
-                 method.team = "OU",
-                 data = sherifdat)
-
-summary.ce(bridge.null)
-bridge.null$res$convergence
-
-## Adjusted CEM
-CEI.bridge <- ce(y ~ 1+time, 
-          ~ 1 | person, 
-          ~ 1 | group, 
-          emergence = ~ -1 + time, # 1 inkluderar "indivudal baseline variance"
-          time = "time",
-          method = "CEI", 
-          method.team = "OU",
-          data = sherifdat)
-
-summary.ce(CEI.bridge)
-CEI.bridge$res$convergence
-
-# CEI homeostasis
-CEI.h <- ce(y ~ 1+time, 
-                 ~ 1 | person, 
-                 ~ 1 | group, 
-                 emergence = ~ -1 + time, # 1 inkluderar "indivudal baseline variance"
-                 time = "time",
-                 method = "CEI", 
-                 method.team = "OU.homeostasis",
-                 data = sherifdat)
-
-summary.ce(CEI.h)
-# residual variance
-exp(CEI.h$unlisted_covariances[1])
-
-## Adjusted CEM
-CEI <- ce(y ~ 1+time, 
-          ~ 1 | person, 
-          ~ 1 + time| group, 
-          emergence = ~ -1 + time, # 1 inkluderar "indivudal baseline variance"
-          method = "CEI", 
-          data = sherifdat)
-
-summary.ce(CEI)
-CEI$res
-
-## GP
 
 GP <- ce(y ~ 1+time, 
          ~ 1 | person, 
@@ -132,40 +40,42 @@ GP <- ce(y ~ 1+time,
          time = "time",
          data = sherifdat)
 
-summary.ce(GP)
-GP$res
-exp(GP$unlisted_covariances[1])
-
-# GP bridge
-GP.bridge <- ce(y ~ 1+time, 
-         ~ 1 | person, 
-         ~ 1 | group, 
-         emergence = ~ 1, 
-         method = "GP",
-         method.team = "OU",
-         time = "time",
-         data = sherifdat)
-
-summary.ce(GP.bridge)
-GP.bridge$res
+CEM2.h <- ce(y ~ 1+time, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ 1 + time, 
+             time = "time",
+             method = "CEM2",
+             method.team = "OU.homeostasis",
+             data = sherifdat)
 
 
-# GP homeostasis
+CEI2.h <- ce(y ~ 1+time, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ -1 + time, # 1 inkluderar "indivudal baseline variance"
+             time = "time",
+             method = "CEI2", 
+             method.team = "OU.homeostasis",
+             data = sherifdat)
+
 GP.h <- ce(y ~ 1+time, 
-                ~ 1 | person, 
-                ~ 1 | group, 
-                emergence = ~ 1, 
-                method = "GP",
-                method.team = "OU.homeostasis",
-                time = "time",
-                data = sherifdat)
-summary.ce(GP.h)
-# residual variance
-exp(GP.h$unlisted_covariances[1])
+           ~ 1 | person, 
+           ~ 1 | group, 
+           emergence = ~ 1, 
+           method = "GP",
+           method.team = "OU.homeostasis",
+           time = "time",
+           data = sherifdat)
 
-# r plot
+weigths <- akaike.weight(list(CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h), c("CEM2","CEI2","GP","CEM2.h","CEI2.h","GP.h"))
+round(weigths[,5],2)
+
+# r plot TODO: ADJUST TO NEW METHODS
 r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
 r.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
 
+# smoothing plots TODO: ADJUST TO NEW METHODS
 smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
 smooth.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
+
