@@ -274,8 +274,8 @@ summary.ce <- function(object) {
       em <- as.character(object$model$`Emergence model`[1]) # formula
       em_names <- unlist(object$model$`Emergence model`[2]) # names of covariates
       
-      em_param <- unlist(object$covariances$indv)[1:length(em_names)]
-      sigma_p2 <- unlist(object$covariances$indv)[(length(em_names)+1)]
+      em_param <- unlist(object$covariances$indv[[2]])[1:length(em_names)]
+      sigma_p2 <- unlist(object$covariances$indv[[2]])[(length(em_names)+1)]
       em_param <- c(em_param,as.matrix(nlme::pdLogChol(sigma_p2)))
       
       em_mat <- matrix(em_param, 
