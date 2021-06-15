@@ -158,7 +158,7 @@ summary.ce <- function(object) {
     delta_param <- em_param[-1]/2
     
     em_mat <- matrix(c(sigma2, delta_param), 
-                     dimnames = list(c("sigma_e^2",em_names[-1]),"Estimate"))
+                     dimnames = list(c("sigma_p^2",em_names[-1]),"Estimate"))
   }
   
   else if (model == "CEI") {
