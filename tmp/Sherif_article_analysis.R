@@ -71,11 +71,13 @@ GP.h <- ce(y ~ 1+time,
 weigths <- akaike.weight(list(CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h), c("CEM2","CEI2","GP","CEM2.h","CEI2.h","GP.h"))
 round(weigths[,5],2)
 
-# r plot TODO: ADJUST TO NEW METHODS
-r.plot(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
-r.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
+# r plot TODO: FIX PROBLEM WITH GP (problem exists with both the new and the old one below)
+r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),y, group, time, sherifdat, names = c("GP","CEI2","CEM2","GP.h","CEI2.h","CEM2.h"))
+
+r.plot_old2(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
+r.plot_old2(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
 
 # smoothing plots TODO: ADJUST TO NEW METHODS
-smooth.plot(CEM, CEI, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
+smooth.plot(CEM2, CEI2, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
 smooth.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
 
