@@ -99,7 +99,7 @@ ggplot(subset(army2,army2$UNIT=="1010F" |army2$UNIT=="1022D" |army2$UNIT=="2004D
   geom_line(aes(col=as.factor(id)), show.legend = F) +
   theme_bw()
 
-# plot of some of the units with  many memebers
+# plot of some of the units with  many members
 ggplot(subset(army2,army2$UNIT=="1000HHC" |army2$UNIT=="1022A" |army2$UNIT=="1022B" 
               |army2$UNIT=="1022HHC" |army2$UNIT=="124A" |army2$UNIT=="144A" 
               |army2$UNIT=="2008D" |army2$BTN=="299" | army2$BTN=="3066" 
@@ -113,6 +113,11 @@ ggplot(subset(army2,army2$UNIT=="1000HHC" |army2$UNIT=="1022A" |army2$UNIT=="102
   theme_bw()
 
 #########
+
+# check of variance at different time points
+var(army2$JSAT.centered[army2$TIME==0])
+var(army2$JSAT.centered[army2$TIME==1])
+var(army2$JSAT.centered[army2$TIME==2])
 
 # CEM from article
 CEM.army <- ce(JSAT ~ 1+TIME, 
@@ -132,21 +137,75 @@ null.army <- ce(JSAT ~ 1+TIME,
                ~ 1 | SUBNUM, 
                ~ 1 + TIME | UNIT, 
                emergence = ~ 1, 
-               method = "CEM", 
+               method = "CEM2", 
                # method.team = "OU",
                data = army2)
 summary.ce(null.army)
-# CEI
-CEI.army <- ce(JSAT ~ 1+TIME, 
+
+# HeCEM
+HeCEM <- ce(JSAT ~ 1+TIME, 
+               ~ 1 | SUBNUM, 
+               ~ 1 + TIME | UNIT, 
+               emergence = ~ 1 + TIME, 
+               method = "CEM2", 
+               # method.team = "OU",
+               data = army2)
+
+# HoCEM
+HoCEM <- ce(JSAT ~ 1+TIME, 
                ~ 1 | SUBNUM, 
                ~ 1 + TIME | UNIT, 
                emergence = ~ -1 + TIME, 
-               method = "CEI", 
+               method = "CEI2", 
                # method.team = "OU",
                data = army2)
  
 summary.ce(CEI.army)
 
+# GP
+GP.army <- ce(JSAT ~ 1+TIME, 
+              ~ 1 | SUBNUM, 
+              ~ 1 + TIME | UNIT,
+              emergence = ~ 1, 
+              method = "GP",
+              time = "TIME",
+              data = army2)
+
+## with team GP
+# HeCEM
+HeCEMGP <- ce(JSAT ~ 1+TIME, 
+            ~ 1 | SUBNUM, 
+            ~ 1 | UNIT, 
+            emergence = ~ 1 + TIME, 
+            method = "CEM2", 
+            method.team = "OU.homeostasis",
+            data = army2)
+#Error in optim(param, function(x) { : 
+#function cannot be evaluated at initial parameters
+
+# HoCEM
+HoCEMGP <- ce(JSAT ~ 1+TIME, 
+            ~ 1 | SUBNUM, 
+            ~ 1 | UNIT, 
+            emergence = ~ -1 + TIME, 
+            method = "CEI2", 
+            method.team = "OU.homeostasis",
+            data = army2)
+
+## Error in optim(param, function(x) { : 
+# function cannot be evaluated at initial parameters
+# GP
+GP.armyGP <- ce(JSAT ~ 1+TIME, 
+              ~ 1 | SUBNUM, 
+              ~ 1 | UNIT,
+              emergence = ~ 1, 
+              method = "GP",
+              method.team = "OU.homeostasis",
+              time = "TIME",
+              data = army2)
+
+
+#####
 CEI.army.b <- ce(JSAT ~ 1+TIME, 
                ~ 1 | SUBNUM, 
                ~ 1 + TIME | UNIT, 
@@ -157,14 +216,7 @@ CEI.army.b <- ce(JSAT ~ 1+TIME,
 
 summary.ce(CEI.army.b)
 
-# GP
-GP.army <- ce(JSAT ~ 1+TIME, 
-         ~ 1 | SUBNUM, 
-         ~ 1 + TIME | UNIT,
-         emergence = ~ 1, 
-         method = "GP",
-         time = "TIME",
-         data = army2)
+
 
 summary.ce(GP.army)
 
