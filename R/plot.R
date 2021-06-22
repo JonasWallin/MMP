@@ -33,10 +33,8 @@ rt <- function(x, time) {
 }
 
 
-r.plot <- function(models, y, group, time, data, names = NULL) {
-  y <- data$y
-  group <- data$group
-  time <- data$time
+r.plot <- function(models, y, group, time, names = NULL) {
+  
   
   r <- r.emperical(y, group, time)
 
