@@ -1,10 +1,12 @@
-data_I <- gendat_HeCE(l3n=5,l2n=5,l1n=3,
+set.seed(124)
+
+data_I <- gendat_HeCE(l3n=5,l2n=5,l1n=7,
                       mu0=3,mu1=0.01,
                       sg00=0.05,sg11=0.005,sg01=-0.005, 
-                      sp0=0.01,
+                      sp0=0.2,
                       sp=0.2,
-                      se=0.01,
-                      delta1=-0.8)
+                      se=0.2,
+                      delta1=-0.08)
 
 ggplot(data_I) + 
   geom_point(aes(time,p, color=factor(person)))+

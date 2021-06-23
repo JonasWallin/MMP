@@ -272,48 +272,95 @@ ce_sim <- function(l3n,l2n,l1n,
                  method.team = "OU.homeostasis",
                  data = data))
   
+  # Lang et al CEM
+  CEM <-try(nlme::lme(y ~ time, random = list(group=pdSymm(~time),
+                                             person=pdIdent(~1)),data=data,
+                     weights=varExp( form = ~ time),
+                     control=lmeControl(maxIter=15000,msMaxIter=15000)))
+  
+  
+  
   # what output do we want to save? 
-  # delta1, convergence, seed
+  # delta1, sp, convergence, seed
   # N = number of reps = 1000
   
+  time <- unique(data$time)
   
   if(!inherits(HeCEM, 'try-error')){
-    d1 <- unlist(HeCEM$covariances$indv[[2]])[2]
+    #d1 <- unlist(HeCEM$covariances$indv[[2]])[2]
+    HeCEM_param <- c(d1 = unlist(HeCEM$covariances$indv[[2]])[2],
+                     sp =exp(unlist(HeCEM$covariances$indv[[2]])[1]),
+                     r_tmax = rt(HeCEM, time)[max(time+1),2])
   } else {
-    d1 <- NA
+    #d1 <- NA
+    HeCEM_param <- c(d1 = NA, sp = NA, r_tmax = NA)
   }
   
   if(!inherits(HeCEMGP, 'try-error')){
-    d2 <- unlist(HeCEMGP$covariances$indv[[2]])[2]
+    #d2 <- unlist(HeCEMGP$covariances$indv[[2]])[2]
+    HeCEMGP_param <- c(d1 = unlist(HeCEMGP$covariances$indv[[2]])[2],
+                     sp =exp(unlist(HeCEMGP$covariances$indv[[2]])[1]),
+                     r_tmax = rt(HeCEMGP, time)[max(time+1),2])
   } else {
-    d2 <- NA
+    #d2 <- NA
+    HeCEMGP_param <- c(d1 = NA, sp = NA, r_tmax = NA)
   }
   
   if(!inherits(HoCEM, 'try-error')){
-    d3 <- unlist(HoCEM$covariances$indv[[2]])[1]
+    #d3 <- unlist(HoCEM$covariances$indv[[2]])[1]
+    HoCEM_param <- c(d1 = unlist(HoCEM$covariances$indv[[2]])[1],
+                      sp =exp(2*unlist(HoCEM$covariances$indv[[2]])[2]),
+                     r_tmax = rt(HoCEM, time)[max(time+1),2])
   } else {
-    d3 <- NA
+    #d3 <- NA
+    HoCEM_param <- c(d1 = NA, sp = NA, r_tmax = NA)
   }
   
   if(!inherits(HoCEMGP, 'try-error')){
-    d4 <- unlist(HoCEMGP$covariances$indv[[2]])[1]
+    #d4 <- unlist(HoCEMGP$covariances$indv[[2]])[1]
+    HoCEMGP_param <- c(d1 = unlist(HoCEMGP$covariances$indv[[2]])[1],
+                       sp =exp(2*unlist(HoCEMGP$covariances$indv[[2]])[2]),
+                       r_tmax = rt(HoCEMGP, time)[max(time+1),2])
   } else {
-    d4 <- NA
+    #d4 <- NA
+    HoCEMGP_paramc(d1 = NA, sp = NA, r_tmax = NA)
   }
   
   if(!inherits(gp, 'try-error')){
-    d5 <- unlist(gp$covariances$indv[[2]])[1]
+    #d5 <- unlist(gp$covariances$indv[[2]])[1]
+    GP_param <- c(d1 = unlist(gp$covariances$indv[[2]])[1],
+                  sp =((exp(unlist(gp$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gp$covariances$indv[[2]])[3])),
+                  r_tmax = rt(gp, time)[max(time+1),2])
   } else {
-    d5 <- NA
+    #d5 <- NA
+    GP_param <- c(d1 = NA, sp = NA, r_tmax = NA)
   }
   
   if(!inherits(gpGP, 'try-error')){
-    d6 <- unlist(gpGP$covariances$indv[[2]])[1]
+    #d6 <- unlist(gpGP$covariances$indv[[2]])[1]
+    gpGP_param <- c(d1 = unlist(gpGP$covariances$indv[[2]])[1],
+                  sp =((exp(unlist(gp$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gp$covariances$indv[[2]])[3])),
+                  r_tmax = rt(gpGP, time)[max(time+1),2])
   } else {
-    d6 <- NA
+    #d6 <- NA
+    gpGP_param  <- c(d1 = NA, sp = NA, r_tmax = NA)
   }
   
-  out <- c(HeCEM=d1,HoCEM=d3,GP=d5,HeCEMGP=d2,HoCEMGP=d4,GPGP=d6)
+  if((!inherits(CEM, 'try-error'))) {
+    CEM_param <- c(d1 =CEM$modelStruct$varStruct,
+                   se=as.numeric(VarCorr(CEM)[6,1]),
+                   r_tmax = NA)
+  } else {
+    CEM_param <- c(d1 = NA, se = NA, r_tmax = NA)
+  }
+  
+  out <- list(HeCEM=HeCEM_param,
+              HoCEM=HoCEM_param,
+              GP=GP_param,
+              HeCEMGP=HeCEMGP_param,
+              HoCEMGP=HoCEMGP_param,
+              GPGP=gpGP_param,
+              CEM=CEM_param)
   
   ## return delta1 for each model
   return(out)
