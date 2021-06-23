@@ -146,16 +146,39 @@ summary.ce(null.army)
 HeCEM <- ce(JSAT ~ 1+TIME, 
                ~ 1 | SUBNUM, 
                ~ 1 + TIME | UNIT, 
-               emergence = ~ 1 + TIME, 
+               emergence = ~ 1 + TIME+I(TIME^2), 
                method = "CEM2", 
                # method.team = "OU",
                data = army2)
+
+r <- r.emperical(army2$JSAT, army2$UNIT, army2$TIME)
+
+time <- seq(min(r$time), max(r$time), length.out = 100)
+
+
+re <- exp(2* HeCEM$covariances$indv[[1]]) + exp(HeCEM$covariances$indv[[2]][1] + HeCEM$covariances$indv[[2]][2]*time+HeCEM$covariances$indv[[2]][3]*time^2) 
+re <- sqrt(re/re[1])
+
+plot(r$time, r$r, ylim=c(0,1.2), cex=1, pch=19)
+lines(time, re,col='red')
+legend("right", 
+       legend = c("HeCEM", "HoCEM"), 
+       lty=1, 
+       col = c("red","blue"), 
+       title = "Model",
+       cex=0.5)
+
+# CEI2
+
+  ro <- exp(2* HoCEM$covariances$indv[[1]]) + exp(2*HoCEM$covariances$indv[[2]][3] +(2*HoCEM$covariances$indv[[2]][1]*time)+(2*HoCEM$covariances$indv[[2]][2]*time^2))
+  ro <- sqrt(ro/ro[1])
+  lines(time, ro,col='blue')
 
 # HoCEM
 HoCEM <- ce(JSAT ~ 1+TIME, 
                ~ 1 | SUBNUM, 
                ~ 1 + TIME | UNIT, 
-               emergence = ~ -1 + TIME, 
+               emergence = ~ -1 + TIME+I(TIME^2), 
                method = "CEI2", 
                # method.team = "OU",
                data = army2)
@@ -166,6 +189,14 @@ summary.ce(CEI.army)
 GP.army <- ce(JSAT ~ 1+TIME, 
               ~ 1 | SUBNUM, 
               ~ 1 + TIME | UNIT,
+              emergence = ~ TIME + I(TIME^2), ## NOT POSSIBLE TO DO THIS
+              method = "GP",
+              time = "TIME",
+              data = army2)
+
+GP <- ce(JSAT ~ 1+TIME, 
+              ~ 1 | SUBNUM, 
+              ~ 1 + TIME | UNIT,
               emergence = ~ 1, 
               method = "GP",
               time = "TIME",
@@ -173,7 +204,7 @@ GP.army <- ce(JSAT ~ 1+TIME,
 
 ## with team GP
 # HeCEM
-HeCEMGP <- ce(JSAT ~ 1+TIME, 
+HeCEMGP <- ce(JSAT.centered ~ 1+TIME, 
             ~ 1 | SUBNUM, 
             ~ 1 | UNIT, 
             emergence = ~ 1 + TIME, 
@@ -205,60 +236,13 @@ GP.armyGP <- ce(JSAT ~ 1+TIME,
               data = army2)
 
 
-#####
-CEI.army.b <- ce(JSAT ~ 1+TIME, 
-               ~ 1 | SUBNUM, 
-               ~ 1 + TIME | UNIT, 
-               emergence = ~ -1 + TIME, 
-               method = "CEI", 
-               method.team = "OU",
-               data = army2)
 
-summary.ce(CEI.army.b)
-
-
-
-summary.ce(GP.army)
-
-## brigde models
-
-CEM.army.b <- ce(JSAT ~ 1+TIME, 
-                 ~ 1 | SUBNUM, 
-                 ~ 1 + TIME | UNIT, 
-                 emergence = ~ 1 + TIME, 
-                 method = "CEM", 
-                 method.team = "OU",
-                 data = army2)
-
-summary.ce(CEM.army.b)
-
-
-CEI.army.b <- ce(JSAT ~ 1+TIME, 
-                 ~ 1 | SUBNUM, 
-                 ~ 1 + TIME | UNIT, 
-                 emergence = ~ -1 + TIME, 
-                 method = "CEI", 
-                 method.team = "OU",
-                 data = army2)
-
-summary.ce(CEI.army.b)
-
-GP.army.b <- ce(JSAT ~ 1+TIME, 
-              ~ 1 | SUBNUM, 
-              ~ 1 + TIME | UNIT,
-              emergence = ~ 1, 
-              method = "GP",
-              time = "TIME",
-              method.team = "OU",
-              data = army2)
-
-summary.ce(GP.army.b)
-
-r.emperical(army2$JSAT,army2$UNIT,army2$TIME)
+r.emperical(army2$JSAT.centered,army2$UNIT,army2$TIME)
 
 # r plot
 r.plot(CEM.army, CEI.army, GP.army, army2$JSAT,army2$UNIT, army2$TIME)
- 
+r.plot(list(HoCEM,HeCEM), army2$JSAT,army2$UNIT, army2$TIME)
+
 # smoothing plot
 smooth.plot(CEM.army, CEI.army, GP.army, army2$JSAT, army2$TIME, 
             groups.to.plot = c(1,8))
