@@ -26,7 +26,7 @@
 #' 
 #'        $method.team - method for time series team (allow null)
 #'
-dataToObject <- function(data_list){
+dataToObject <- function(data_list, Teams = NULL){
   
   # data_list - output list from function getData()
   data <- data_list
@@ -92,7 +92,8 @@ dataToObject <- function(data_list){
   dataOrder <- NULL
 
   TeamObj <- list()
-  Teams <- factor(team)
+  if(is.null(Teams))
+    Teams <- factor(team)
   uTeams <- unique(Teams)
   TeamObj$indexTeams <- Teams
   if(is.null(Xf)==F){
@@ -202,7 +203,7 @@ dataToObject <- function(data_list){
     
     TeamObj$teams[[i]]$indv <- list()
     indv_i <-  levels(TeamObj$teams[[i]]$data$indv)
-    
+    TeamObj$teams[[i]]$indvNames <- indv_i  
   
     
     ##

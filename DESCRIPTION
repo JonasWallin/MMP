@@ -13,7 +13,8 @@ Imports:
   R6,
   dplyr,
   Matrix,
-  rSPDE
+  rSPDE,
+  tidyverse
 LinkingTo: Rcpp, RcppEigen
 Depends: 
     R (>= 2.10)

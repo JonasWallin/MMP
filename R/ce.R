@@ -8,7 +8,7 @@ ce <- function(formula1,
                method,
                method.team = NULL,
                time = NULL,
-               data,
+               data.in,
                REML = F) {
   
   data <- getData(formula1, 
@@ -16,7 +16,7 @@ ce <- function(formula1,
                   formula3, 
                   emergence, 
                   method,
-                  data,
+                  data.in,
                   method.team,
                   time)
   
@@ -28,7 +28,8 @@ ce <- function(formula1,
                 'Emergence model'           = list(emergence,data$names[4]),
                 'Method'                    = method,
                 'Team process'              = method.team,
-                'Time'                      = time)
+                'Time'                      = time,
+                'data'                      = data.in)
   
   
   object <- dataToObject(data)

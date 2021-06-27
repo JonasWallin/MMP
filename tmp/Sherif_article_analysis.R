@@ -116,6 +116,7 @@ GP <- ce(y.centered ~ 1+time,
          time = "time",
          data = sherifdat)
 
+
 CEM2.h <- ce(y.centered ~ 1+time, 
              ~ 1 | person, 
              ~ 1 | group, 
@@ -148,7 +149,7 @@ weigths <- akaike.weight(list(CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h), c("CEM2","CEI2",
 round(weigths[,5],2)
 
 # r plot 
-r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),y, group, time, sherifdat, names = c("GP","HoCEM","HeCEM","GP+GP","HoCEM+GP","HeCEM+GP"))
+#r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),y, group, time, sherifdat, names = c("GP","HoCEM","HeCEM","GP+GP","HoCEM+GP","HeCEM+GP"))
 
-r.plot_old2(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
-r.plot_old2(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
+#r.plot_old2(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
+#r.plot_old2(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
