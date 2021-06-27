@@ -6,9 +6,9 @@
 #'                   $data$y
 #'
 #' @return - the logliklihood
-loglik <- function(param, Obj){
+loglik <- function(param, Obj, REML=F){
 
-  return(likAndBeta(param, Obj)$lik)
+  return(likAndBeta(param, Obj, REML)$lik)
 }
 #'
 #' Get the fixed effect for the model

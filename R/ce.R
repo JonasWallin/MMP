@@ -8,7 +8,8 @@ ce <- function(formula1,
                method,
                method.team = NULL,
                time = NULL,
-               data) {
+               data,
+               REML = F) {
   
   data <- getData(formula1, 
                   formula2, 
@@ -36,23 +37,23 @@ ce <- function(formula1,
   
   if (model$Method == "GP") {
   
-  res <-optim(param, function(x){-loglik(x, object) })
-  res <-optim(res$par, function(x){-loglik(x, object) })
+  res <-optim(param, function(x){-loglik(x, object,REML ) })
+  res <-optim(res$par, function(x){-loglik(x, object, REML) })
   
     if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) },control = list(maxit=5000))
+      res <-optim(res$par, function(x){-loglik(x, object, REML) },control = list(maxit=5000))
       if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) })
+      res <-optim(res$par, function(x){-loglik(x, object, REML) })
       }
     }
   
   } else {
-    res <-optim(param, function(x){-loglik(x, object) })
-    res <-optim(res$par, function(x){-loglik(x, object) },control = list(maxit=5000))
+    res <-optim(param, function(x){-loglik(x, object,REML) })
+    res <-optim(res$par, function(x){-loglik(x, object, REML) },control = list(maxit=5000))
     if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object) })
+      res <-optim(res$par, function(x){-loglik(x, object, REML) })
       if (res$convergence != 0) {
-        res <-optim(res$par, function(x){-loglik(x, object) })
+        res <-optim(res$par, function(x){-loglik(x, object, REML) })
       }
     }
   }
@@ -65,7 +66,7 @@ ce <- function(formula1,
   
   paramPlot <- res$par
   
-  loglik <- -res$value
+  loglik <- loglik(res$par, object)
   
   # AIC: 2*k - 2*loglik, k = number of estimated parameters 
   k <- sum(length(paramPlot),

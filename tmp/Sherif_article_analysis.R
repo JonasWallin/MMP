@@ -30,7 +30,8 @@ CEI2 <- ce(y ~ 1+time,
            ~ 1 + time | group, 
            emergence = ~ -1 + time, # to only extend with P_ij^0, still keep -1
            method = "CEI2", 
-           data = sherifdat)
+           data = sherifdat,
+           REML = F)
 
 GP <- ce(y ~ 1+time, 
          ~ 1 | person, 
