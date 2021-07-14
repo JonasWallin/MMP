@@ -80,9 +80,47 @@ r.plot_old2(CEM, CEI, GP, sherifdat$y,sherifdat$group, sherifdat$time)
 r.plot_old2(CEM.homeostasis, CEI.h, GP.h, sherifdat$y,sherifdat$group, sherifdat$time)
 
 # smoothing plots TODO: ADJUST TO NEW METHODS
-smooth.plot(CEM2, CEI2, GP, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
-smooth.plot(CEM.homeostasis, CEI.h, GP.h, sherifdat$y, sherifdat$time, groups.to.plot = c(1,8))
 
+smooth.plot(models=list(CEM2,CEI2,GP),
+             group = sherifdat$group,
+             person = sherifdat$person, 
+             time = sherifdat$time, 
+             y = sherifdat$y,
+             groups.to.plot = c(1,8), 
+             names = c("HetCEM", "HomCEM", "GP"))
+
+smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("HetCEM GP", "HomCEM GP", "GP GP"))
+
+# separate plots for each model with vs without team gp
+smooth.plot(models=list(CEM2,CEM2.h),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("HetCEM","HetCEM GP"))
+
+smooth.plot(models=list(CEI2,CEI2.h),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("HomCEM","HomCEM GP"))
+
+smooth.plot(models=list(GP,GP.h),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("GP","GP GP"))
 
 
 ### same analysis on centered data
