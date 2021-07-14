@@ -74,7 +74,102 @@ r.plot <- function(models, y, group, time, names = NULL) {
 
 
 ### Smoothing distribution where new observations could land
-smooth.plot <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(1,2)) {
+smooth.plot <- function(models, 
+                         group,
+                         person, 
+                         time, 
+                         y, 
+                         groups.to.plot = c(1,2), 
+                         names = NULL) {
+  
+  data <- data.frame(group=group,person=person,time=time,y=y)
+
+  # create data frame for the ones we want to plot
+  n.time = length(unique(data$time))/0.2
+  
+  for (j in groups.to.plot) {
+    for (i in unique(data$person[data$group==j])) {
+      temp <- cbind(person = rep(i,n.time),
+                    group  = rep(j,n.time), 
+                    time = seq(0,4,length.out = n.time))
+      if (i == unique(data$person[data$group==j])[1]) {
+        withingroup.data.new <- temp
+      } else {
+        withingroup.data.new <- rbind(withingroup.data.new,temp)
+      }
+    }
+    if (j == groups.to.plot[1]) {
+      data.new <- withingroup.data.new
+    } else {
+      data.new <- rbind(data.new,withingroup.data.new)
+    }
+  }
+  data.new <- as.data.frame(data.new)
+  
+  # get predicted values
+  out <- lapply(models, function(m) {
+    pred <- as.data.frame(predict.ce(m,data.new))
+    names(pred) <- c("yhat","variance","variance2")
+    cbind(data.new,pred)
+  })
+  
+  
+  if (!is.null(names)){
+    names(out) <- names
+  }
+  
+  # merge all predicted values into one data set
+  
+  for (i in 1:length(models)) {
+    if (i == 1) {
+      plot.data <- cbind(out[[i]],Model=i)
+    } else {
+      plot.data <- rbind(plot.data,cbind(out[[i]],Model=i))
+    }
+  }
+  
+  # add model names
+  if (!is.null(names)){
+    for (i in 1:length(names)) {
+      plot.data$Model <- ifelse(plot.data$Model == i,names[i],plot.data$Model)
+    }
+  }  else {
+    plot.data$Model <- as.character(plot.data$Model)
+  }
+  
+  # create lower and upper limits
+  plot.data$ul <- plot.data$yhat + 2*sqrt(plot.data$variance)
+  plot.data$ll <- plot.data$yhat - 2*sqrt(plot.data$variance)
+  
+  # get true y values
+  for (i in groups.to.plot) {
+    index <- data$group == i
+    
+    if (i == groups.to.plot[1]) {
+      indices <- index
+    } else {
+      indices <-cbind(indices,index)
+    }
+  }
+  
+  indices <- ifelse(rowSums(indices)!=0,TRUE,FALSE)
+  data <- data[indices,]
+  
+  # plot
+  ggplot(plot.data) +
+    geom_point(data=data, aes(time, y)) +
+    facet_grid(rows = vars(group), cols = vars(person),labeller = label_both) +
+    geom_line(mapping = aes(time, yhat, color = Model,linetype = Model)) +
+    geom_ribbon(aes(time, yhat,ymin = ll, ymax = ul, fill = Model), alpha = .15) +
+    theme_bw() +
+    xlab("Time") +
+    ylab("Predicted value of Y")
+}
+
+
+
+
+smooth.plot_old2 <- function(CEM, CEI, GP, y, time, type = "total", groups.to.plot = c(1,2)) {
   
   paramList1 <- CEM$covariances # CEM
   paramList2 <- CEI$covariances # CEI
