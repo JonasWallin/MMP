@@ -1,4 +1,4 @@
-## r(mat_t) plots for simulation 
+## r(max_t) plots for simulation 
 
 true_rtmax <- rep(rep(c(1,0.92,0.88,0.83),each = 7),4)
 ce_type <- rep(c("HetCE","HomCE","HetCE GP","HomCE GP"),each=28)
@@ -20,7 +20,10 @@ rtmax <- c(
           0.98,0.84,0.98,0.96,0.80,1,0.99,
           
           # HetCE GP
-          rep(NA,28),
+          1.01,1,1.03,1,1,1,1.03,
+          0.98,1,0.99,0.91,1,0.9,0.98,
+          0.93,0.98,0.92,0.87,0.95,0.86,0.95,
+          0.89,0.96,0.87,0.83,0.87,0.83,0.92,
           
           # HomCE GP
           1.01,1,1.03,1,1,1,1.03,
@@ -30,15 +33,18 @@ rtmax <- c(
 
 dat <- data.frame(ce_type,d1,true_rtmax,Model,rtmax)
 
+# one plot for each data type
 ggplot(dat,aes(d1,rtmax))+
   facet_wrap(vars(ce_type))+
   geom_point(aes(color=Model)) +
   geom_line(aes(color=Model,linetype=Model)) +
   theme_bw() +
+  scale_x_continuous(breaks=c(-0.08,-0.05,-0.03,0.00))+
   geom_point(aes(d1,true_rtmax))+
   xlab(expression(delta [1])) +
   ylab("r(tmax)")
 
+# one plot for each model
 ggplot(dat,aes(d1,rtmax))+
   facet_wrap(vars(Model))+
   #facet_grid(rows = vars(group), cols = vars(person),labeller = label_both) +
