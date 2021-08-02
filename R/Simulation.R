@@ -32,7 +32,7 @@ gendat_HeCEGP <- function(l3n,l2n,l1n,
                           sp0, # individual prior variance
                           sp, # individual variance
                           se, # error variance
-                          sigma, # standard deviation GP
+                          sgp, # GP variance at time 0
                           corr, # correlation largest distance between time points
                           delta1, # consensus
                           delta2 # group delta
@@ -48,7 +48,7 @@ gendat_HeCEGP <- function(l3n,l2n,l1n,
   ## längsta avståndet i data
   k <- max(Dist)/(-log(corr))
   
-  param <- c(sigma, -log(k)) # exp(param[2] ) = 1/k 
+  param <- c(log(sqrt((2 * 1/k) *sgp)), -log(k)) # exp(param[2] ) = 1/k 
   Sigma <- OUcov(Dist, param) 
   
   # mean vector
@@ -101,7 +101,7 @@ gendat_HoCEGP <- function(l3n,l2n,l1n,
                           sp0, # individual prior variance
                           sp, # individual variance
                           se, # error variance
-                          sigma, # standard deviation GP
+                          sgp, # variance of gp at time 0
                           corr, # correlation largest distance between time points
                           delta1, # consensus
                           delta2 # group delta
@@ -117,7 +117,7 @@ gendat_HoCEGP <- function(l3n,l2n,l1n,
   ## längsta avståndet i data
   k <- max(Dist)/(-log(corr))
   
-  param <- c(sigma, -log(k)) # exp(param[2] ) = 1/k 
+  param <- c(log(sqrt((2 * 1/k) *sgp)), -log(k)) # exp(param[2] ) = 1/k 
   Sigma <- OUcov(Dist, param) 
   
   # mean vector
@@ -153,12 +153,14 @@ ce_sim <- function(l3n,l2n,l1n,
                    sp0, # individual prior variance
                    sp, # individual variance
                    se, # error variance
-                   sigma=NULL, # standard deviation GP
+                   sgp=NULL, # variance of GP at time 0
                    corr=NULL, # correlation largest distance between time points
                    delta1,
                    delta2=NULL,
                    datatype, # "HeCEM","HoCEM","HeCEM+GP","HoCEM+GP"
-                   REML = F)  
+                   REML = F,
+                   index,
+                   path=NULL)  
 {
   
   ## Generate data         
@@ -190,7 +192,7 @@ ce_sim <- function(l3n,l2n,l1n,
                           sp0,
                           sp,
                           se,
-                          sigma,
+                          sgp,
                           corr,
                           delta1,
                           delta2)
@@ -202,7 +204,7 @@ ce_sim <- function(l3n,l2n,l1n,
                           sp0,
                           sp,
                           se,
-                          sigma,
+                          sgp,
                           corr,
                           delta1,
                           delta2)
@@ -212,174 +214,166 @@ ce_sim <- function(l3n,l2n,l1n,
   ## Estimate models
   ## HeCEM
   # HeCEM regular
-  HeCEM <- try(ce(y ~ 1+time, 
-                  ~ 1 | person, 
-                  ~ 1 + time | group, 
-                  emergence = ~ 1 + time, 
-                  method = "CEM2", 
-                  data = data,
-                  REML = REML))
+  HeCEM <- tryCatch(ce(y ~ 1+time,
+                       ~ 1 | person, 
+                       ~ 1 + time | group, 
+                       emergence = ~ 1 + time, 
+                       method = "CEM2", 
+                       data = data,
+                       REML = REML),
+                    error = function(e){NA})
   
   
   # HeCEM + group process
-  HeCEMGP <- try(ce(y ~ 1+time, 
-                    ~ 1 | person, 
-                    ~ 1 | group, 
-                    emergence = ~ 1 + time, 
-                    method = "CEM2", 
-                    time = "time",
-                    method.team = "OU.homeostasis",
-                    data = data,
-                    REML = REML))
+  HeCEMGP <- tryCatch(ce(y ~ 1+time,
+                         ~ 1 | person, 
+                         ~ 1 | group, 
+                         emergence = ~ 1 + time, 
+                         method = "CEM2", 
+                         time = "time",
+                         method.team = "OU.homeostasis",
+                         data = data,
+                         REML = REML), 
+                      error = function(e){NA})
   
   
   ## HoCEM
   # HoCEM regular
-  HoCEM <- try(ce(y ~ 1+time, 
-                  ~ 1 | person, 
-                  ~ 1 + time | group, 
-                  emergence = ~ -1 + time, 
-                  method = "CEI2", 
-                  data = data,
-                  REML = REML))
+  HoCEM <- tryCatch(ce(y ~ 1+time,
+                       ~ 1 | person,
+                       ~ 1 + time | group,
+                       emergence = ~ -1 + time,
+                       method = "CEI2",
+                       data = data,
+                       REML = REML),
+                    error = function(e){NA})
   
   
   # HoCEM + group process
-  HoCEMGP <- try(ce(y ~ 1+time, 
-                    ~ 1 | person, 
-                    ~ 1 | group, 
-                    emergence = ~ -1 + time, 
-                    method = "CEI2", 
-                    time = "time",
-                    method.team = "OU.homeostasis",
-                    data = data,
-                    REML = REML))
+  HoCEMGP <- tryCatch(ce(y ~ 1+time,
+                         ~ 1 | person, 
+                         ~ 1 | group, 
+                         emergence = ~ -1 + time, 
+                         method = "CEI2", 
+                         time = "time",
+                         method.team = "OU.homeostasis",
+                         data = data,
+                         REML = REML),
+                      error = function(e){NA})
   
   ## GP
   # GP regular
-  gp <- try(ce(y ~ 1+time, 
-               ~ 1 | person, 
-               ~ 1 + time | group, 
-               emergence = ~ 1, 
-               method = "GP",
-               time = "time",
-               data = data,
-               REML = REML))
+  gp <- tryCatch(ce(y ~ 1+time,
+                    ~ 1 | person, 
+                    ~ 1 + time | group, 
+                    emergence = ~ 1, 
+                    method = "GP",
+                    time = "time",
+                    data = data,
+                    REML = REML),
+                 error = function(e){NA})
   
   # GP  + group process
-  gpGP <- try(ce(y ~ 1+time, 
-                 ~ 1 | person, 
-                 ~ 1 | group, 
-                 emergence = ~ 1, 
-                 method = "GP",
-                 time = "time",
-                 method.team = "OU.homeostasis",
-                 data = data,
-                 REML = REML))
+  gpGP <- tryCatch(ce(y ~ 1+time,
+                      ~ 1 | person,
+                      ~ 1 | group, 
+                      emergence = ~ 1, 
+                      method = "GP",
+                      time = "time",
+                      method.team = "OU.homeostasis",
+                      data = data,
+                      REML = REML),
+                   error = function(e){NA})
   
   # Lang et al CEM
-  CEM <-try(nlme::lme(y ~ time, random = list(group=pdSymm(~time),
+  CEM <-tryCatch(nlme::lme(y ~ time, random = list(group=pdSymm(~time),
                                              person=pdIdent(~1)),data=data,
                      weights=varExp( form = ~ time),
-                     control=lmeControl(maxIter=15000,msMaxIter=15000)))
+                     control=lmeControl(maxIter=15000,msMaxIter=15000)),
+                 error = function(e){NA})
   
-  
-  
-  # what output do we want to save? 
-  # delta1, sp, convergence, seed
-  # N = number of reps = 1000
+  ## results
   
   time <- unique(data$time)
   
-  if(!inherits(HeCEM, 'try-error')){
-    #d1 <- unlist(HeCEM$covariances$indv[[2]])[2]
-    HeCEM_param <- c(d1 = unlist(HeCEM$covariances$indv[[2]])[2]/2,
-                     sp =exp(unlist(HeCEM$covariances$indv[[2]])[1]),
-                     r_tmax = rt(HeCEM, time)[max(time+1),2],
-                     loglik = HeCEM$loglik)
-  } else {
-    #d1 <- NA
-    HeCEM_param <- c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
+  HeCEM_param <- tryCatch(c(d1 = unlist(HeCEM$covariances$indv[[2]])[2]/2,
+                            sp =exp(unlist(HeCEM$covariances$indv[[2]])[1]),
+                            r_tmax = rt(HeCEM, time)[max(time+1),2],
+                            loglik = HeCEM$loglik),
+                          error = function(e){
+                            c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
   
-  if(!inherits(HeCEMGP, 'try-error')){
-    #d2 <- unlist(HeCEMGP$covariances$indv[[2]])[2]
-    HeCEMGP_param <- c(d1 = unlist(HeCEMGP$covariances$indv[[2]])[2]/2,
-                     sp =exp(unlist(HeCEMGP$covariances$indv[[2]])[1]),
-                     r_tmax = rt(HeCEMGP, time)[max(time+1),2],
-                     loglik = HeCEMGP$loglik)
-  } else {
-    #d2 <- NA
-    HeCEMGP_param <- c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
+  HeCEMGP_param <- tryCatch(c(d1 = unlist(HeCEMGP$covariances$indv[[2]])[2]/2,
+                              sp =exp(unlist(HeCEMGP$covariances$indv[[2]])[1]),
+                              r_tmax = rt(HeCEMGP, time)[max(time+1),2],
+                              loglik = HeCEMGP$loglik),
+                            error = function(e){
+                              c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
   
-  if(!inherits(HoCEM, 'try-error')){
-    #d3 <- unlist(HoCEM$covariances$indv[[2]])[1]
-    HoCEM_param <- c(d1 = unlist(HoCEM$covariances$indv[[2]])[1],
-                      sp =exp(2*unlist(HoCEM$covariances$indv[[2]])[2]),
-                     r_tmax = rt(HoCEM, time)[max(time+1),2],
-                     loglik = HoCEM$loglik)
-  } else {
-    #d3 <- NA
-    HoCEM_param <- c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
+
+  HoCEM_param <- tryCatch(c(d1 = unlist(HoCEM$covariances$indv[[2]])[1],
+                            sp =exp(2*unlist(HoCEM$covariances$indv[[2]])[2]),
+                            r_tmax = rt(HoCEM, time)[max(time+1),2],
+                            loglik = HoCEM$loglik),
+                          error = function(e){
+                            c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)}) 
   
-  if(!inherits(HoCEMGP, 'try-error')){
-    #d4 <- unlist(HoCEMGP$covariances$indv[[2]])[1]
-    HoCEMGP_param <- c(d1 = unlist(HoCEMGP$covariances$indv[[2]])[1],
-                       sp =exp(2*unlist(HoCEMGP$covariances$indv[[2]])[2]),
-                       r_tmax = rt(HoCEMGP, time)[max(time+1),2],
-                       loglik = HoCEMGP$loglik)
-  } else {
-    #d4 <- NA
-    HoCEMGP_paramc(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
-  
-  if(!inherits(gp, 'try-error')){
-    #d5 <- unlist(gp$covariances$indv[[2]])[1]
-    GP_param <- c(d1 = unlist(gp$covariances$indv[[2]])[1],
-                  sp =((exp(unlist(gp$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gp$covariances$indv[[2]])[3])),
-                  r_tmax = rt(gp, time)[max(time+1),2],
-                  loglik = gp$loglik)
-  } else {
-    #d5 <- NA
-    GP_param <- c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
-  
-  if(!inherits(gpGP, 'try-error')){
-    #d6 <- unlist(gpGP$covariances$indv[[2]])[1]
-    gpGP_param <- c(d1 = unlist(gpGP$covariances$indv[[2]])[1],
-                  sp =((exp(unlist(gp$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gp$covariances$indv[[2]])[3])),
-                  r_tmax = rt(gpGP, time)[max(time+1),2],
-                  loglik = gpGP$loglik)
-  } else {
-    #d6 <- NA
-    gpGP_param  <- c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)
-  }
-  
-  if((!inherits(CEM, 'try-error'))) {
-    d1 <- CEM$modelStruct$varStruct
-    se <- as.numeric(VarCorr(CEM)[6,1])
-    sp0 <- as.numeric(VarCorr(CEM)[5,1])
-    rx <- sp0 + se*exp(2*d1*time)
-    rx <- sqrt(rx/rx[1])
-    CEM_param <- c(d1 =d1,
-                   se=se,
-                   r_tmax = rx[max(time+1)],
-                   loglik= as.numeric(CEM$logLik))
-  } else {
-    CEM_param <- c(d1 = NA, se = NA, r_tmax = NA, loglik=NA)
-  }
+
+  HoCEMGP_param <- tryCatch(c(d1 = unlist(HoCEMGP$covariances$indv[[2]])[1],
+                              sp =exp(2*unlist(HoCEMGP$covariances$indv[[2]])[2]),
+                              r_tmax = rt(HoCEMGP, time)[max(time+1),2],
+                              loglik = HoCEMGP$loglik),
+                            error = function(e){
+                              c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
+
+  gp_param <- tryCatch(c(d1 = unlist(gp$covariances$indv[[2]])[1],
+                         sp =((exp(unlist(gp$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gp$covariances$indv[[2]])[3])),
+                         r_tmax = rt(gp, time)[max(time+1),2],
+                         loglik = gp$loglik),
+                       error = function(e){
+                         c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
+
+  gpGP_param <- tryCatch(c(d1 = unlist(gpGP$covariances$indv[[2]])[1],
+                           sp =((exp(unlist(gpGP$covariances$indv[[2]])[2]))^2)/(2*exp(unlist(gpGP$covariances$indv[[2]])[3])),
+                           r_tmax = rt(gpGP, time)[max(time+1),2],
+                           loglik = gpGP$loglik),
+                         error = function(e){
+                           c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
+
+  CEM_param <- tryCatch(c(d1 =CEM$modelStruct$varStruct,
+                          se=as.numeric(VarCorr(CEM)[6,1]),
+                          r_tmax = sqrt((as.numeric(VarCorr(CEM)[5,1]) + as.numeric(VarCorr(CEM)[6,1])*exp(2*CEM$modelStruct$varStruct*time))/
+                                          (as.numeric(VarCorr(CEM)[5,1]) + as.numeric(VarCorr(CEM)[6,1])*exp(2*CEM$modelStruct$varStruct*time))[1])[max(time+1)],
+                          loglik= as.numeric(CEM$logLik)),
+                        error = function(e){
+                          c(d1 = NA, sp = NA, r_tmax = NA, loglik=NA)})
+
   
   out <- list(HeCEM=HeCEM_param,
               HoCEM=HoCEM_param,
-              GP=GP_param,
+              GP=gp_param,
               HeCEMGP=HeCEMGP_param,
               HoCEMGP=HoCEMGP_param,
               GPGP=gpGP_param,
               CEM=CEM_param)
   
-  ## return delta1 for each model
+  ## save stuff
+  # want to save seed, index, data, models and output
+  all_output <- list(seed_info = c(seed = 123+index, index=index),
+                     data = data, 
+                     fitted_models = list(HeCEM=HeCEM,
+                                          HoCEM=HoCEM,
+                                          GP=gp,
+                                          HeCEMGP=HeCEMGP,
+                                          HoCEMGP=HoCEMGP,
+                                          GPGP=gpGP,
+                                          CEM=CEM),
+                     output = out)
+  
+  if (!is.null(path)){
+    saveRDS(all_output,file =paste0(path,  delta1,  "_",index, ".Rdata"))
+  }
+  
   return(out)
 }
 
