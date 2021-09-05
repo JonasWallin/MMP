@@ -8,7 +8,7 @@ library(robustbase)
 ## run this for delta1 = 0, -0.03, -0.05, -0.08,
 ## for each datatype = "HeCEM","HoCEM","HeCEM+GP","HoCEM+GP"
 
-
+## additional simulation with sigma^2_p0 = 0.001, delta1=-0.7, gives r(tmax)=0.1
 
 # setup
 
@@ -27,15 +27,15 @@ system.time(res <- parLapply(cl,1:N, function(i,...) {
     set.seed(123+i); 
     c(ce_sim(l3n=20,l2n=7,l1n=7,
              mu0=3,mu1=0.01,
-             #sg00=0.05,sg11=0.005,sg01=-0.005, # for HeCEM and HoCEM
-             sp0=0.1,
+             sg00=0.05,sg11=0.005,sg01=-0.005, # for HeCEM and HoCEM
+             sp0=0.001,
              sp=0.1,
              se=0.1,
-             sgp=0.05, # for "HeCEM+GP" and "HoCEM+GP"
-             corr=0.05, # for "HeCEM+GP" and "HoCEM+GP"
-             delta1=0,
-             delta2=0.06, # for "HeCEM+GP" and "HoCEM+GP"
-             datatype = "HeCEM+GP",
+             #sgp=0.05, # for "HeCEM+GP" and "HoCEM+GP"
+             #corr=0.05, # for "HeCEM+GP" and "HoCEM+GP"
+             delta1=-0.7,
+             #delta2=0.06, # for "HeCEM+GP" and "HoCEM+GP"
+             datatype = "HoCEM",
              REML=F,
              index = i,
              path = "/Users/baurne/Documents/Consensus emergence/SimulationResults/"),
@@ -83,6 +83,6 @@ result_list <- list(ce_sim_output = res,
                     summary_output = output,
                     mean_results = sumres)
 
-saveRDS(result_list, file = "HeCEGP_0.RData")
+saveRDS(result_list, file = "HoCE_additional.RData")
 
 
