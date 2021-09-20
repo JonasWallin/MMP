@@ -21,9 +21,10 @@ pl1 <- ggplot(data=sherifdat,
 
 
 
-pl1 <- pl1 +  facet_wrap(~group, ncol = 2) + 
+pl1 <- pl1 +  facet_wrap(~group, ncol = 4) + 
   labs(title = "Sherif (1935) autokinetic data") + 
-  theme_bw() 
+  theme_bw() +
+  theme(legend.position="bottom")
 
 
 print(pl1)
