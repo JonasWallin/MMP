@@ -21,7 +21,7 @@ dat <- bind_rows(cei,cem)
 dat$y <- as.integer(dat$y)
 
 # Names for facets
-time.labs <- c("Timepoint 1","Timepoint 2","Timepoint 3","Timepoint 4")
+time.labs <- c("Time point 1","Time point 2","Time point 3","Time point 4")
 names(time.labs) <- c(1,2,3,4)
 
 ggplot(dat) + 
