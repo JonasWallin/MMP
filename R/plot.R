@@ -60,13 +60,19 @@ r.plot <- function(models, y, group, time, names = NULL) {
 
   # plot
   ggplot(dat) +
-    geom_line(mapping = aes(time, r, linetype = Model, color = Model), na.rm = T) +
+    geom_line(mapping = aes(time, r, linetype = Model, color = Model),size=1, na.rm = T) +
     geom_point(mapping = aes(time, r_empirical),na.rm = T) +
     scale_linetype_discrete(na.translate=FALSE) +
     scale_color_discrete(na.translate=FALSE) +
     theme_bw() +
-    labs(title = "r(t) plot") +
-    xlab("Time") 
+    #labs(title = "r(t) plot") +
+    xlab("Time") +
+    theme(legend.text=element_text(size=14),
+          legend.title=element_text(size=14),
+          axis.text.x = element_text(size = 11),
+          axis.text.y = element_text(size = 11),  
+          axis.title.x = element_text(size = 14),
+          axis.title.y = element_text(size = 14))
 }
 
 
@@ -159,11 +165,17 @@ smooth.plot <- function(models,
   ggplot(plot.data) +
     geom_point(data=data, aes(time, y)) +
     facet_grid(rows = vars(group), cols = vars(person),labeller = label_both) +
-    geom_line(mapping = aes(time, yhat, color = Model,linetype = Model)) +
+    geom_line(mapping = aes(time, yhat, color = Model,linetype = Model),size=1) +
     geom_ribbon(aes(time, yhat,ymin = ll, ymax = ul, fill = Model), alpha = .15) +
     theme_bw() +
     xlab("Time") +
-    ylab("Predicted value of Y")
+    ylab("Predicted value of Y") +
+    theme(legend.text=element_text(size=14),
+          legend.title=element_text(size=14),
+          axis.text.x = element_text(size = 11),
+          axis.text.y = element_text(size = 11),  
+          axis.title.x = element_text(size = 14),
+          axis.title.y = element_text(size = 14))
 }
 
 
