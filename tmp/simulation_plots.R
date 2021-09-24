@@ -43,7 +43,12 @@ ggplot(dat,aes(d1,rtmax))+
   geom_point(aes(d1,true_rtmax))+
   xlab(expression(delta [1])) +
   ylab(expression(r(t [max]))) +
-  theme(legend.text=element_text(size=11))
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),  
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
 
 
 # one plot for each model
