@@ -1,15 +1,16 @@
 ##
-# simulate n indivual GP then fit 
-# then same processes with conesus modeling
+# simulate n individual GP then fit 
+# then same processes with conses modeling
 # 
 ##
 graphics.off()
 library(ggplot2)
 library(MMP)
-set.seed(6)
-save.fig = T
+set.seed(3)
+save.fig = F
 n.indv <- 4
 T_     <- 4
+delta = -0.2
 n.grid <- 500
 n.obs  <- 5
 Maternparam <- log(c(1.,1.,2.5))
@@ -18,10 +19,10 @@ grid       <- seq(0,T_, length.out = n.grid)
 grid.obs   <- seq(1,n.grid, by=ceiling(n.grid/n.obs))
 Sigma.grid <- Materncov(d = as.matrix(dist(grid)), Maternparam)
 L.grid     <- t(chol(Sigma.grid))
-Matern_cov     <- MaternBridge$new(0, T_,1)
-Matern_input   <-  list(D =    as.matrix(1),
+Matern_cov     <- MaternConsenus$new(1)
+Matern_input   <-  list(D =    grid,
                     time = grid) 
-Sigma_con  <- Matern_cov$get_Cov(c(log(T_+1),Maternparam), Matern_input)
+Sigma_con  <- Matern_cov$get_Cov(c(delta,Maternparam), Matern_input)
 L.con      <- t(chol(Sigma_con))
 Indivauls <- list()
 Z <- c(0,0.2)
@@ -76,7 +77,7 @@ Latent.data.con <- data.frame(time  = Latent.con[,1],
 pl1 <- ggplot(data=Latent.data, 
               aes(x=time,y=U )) + 
   geom_line(size=0.5,alpha=0.2) + 
-  geom_point(data=Obs.data, aes(x=time,y=y) ,size=3)+ xlab("time") + ylab("y,u") 
+  geom_point(data=Obs.data, aes(x=time,y=y) ,size=3)+ xlab("t") + ylab("y_t,P(t)") 
 pl1 <- pl1 +  facet_wrap(~I, ncol = 2) 
 if(save.fig)
   ggsave('Figure_GP_obs.pdf', pl1)
@@ -88,11 +89,11 @@ pl2 <- ggplot(data=con.data,
               linetype=c)) + 
        geom_line(size=1,alpha=1) +
   scale_color_manual(name=expression(delta),values = c("black", "red"),
-                     labels = c(expression(infinity), T_+1))+
+                     labels = c(0, delta))+
        scale_linetype_manual(name=expression(delta),
                              values=c("dashed", "solid"), 
-                             labels = c(expression(infinity), T_+1)) +
-       xlab("time") + ylab("y,u") 
+                             labels = c(0, delta)) +
+       xlab("time") + ylab("GP(time)") + theme(legend.key.size = unit(0.9 , 'cm'))
 pl2 <- pl2 +  facet_wrap(~I, ncol = 2) 
 print(pl2)
 if(save.fig)

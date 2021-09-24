@@ -364,3 +364,47 @@ MaternBridge <- R6::R6Class("Matern bridge", list(
   }
 ))
 
+MaternConsenus <- R6::R6Class("Matern consensus", list(
+  d = NULL,
+  tmin = NULL,
+  tmax = NULL,
+  initialize = function(d_D) {
+  self$d<- 3 + d_D },
+  get_name = function(){return('Matern consensus')},
+  get_param_length = function(){return(self$d)},
+  get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
+    
+    Sigma <- matrix(0, 
+                    nrow = length(obj[[time]]),
+                    ncol = length(obj[[time]]))
+    # time < delta
+    
+    
+    time <- obj[[time]]
+    Dist <- as.matrix(dist(time))   
+    Sigma <- Materncov(Dist, param[(self$d-2):self$d])
+    
+    # homeostasis effect
+    delta <- c(exp(as.matrix(obj[[cov_name]])%*%as.vector(param[1:(self$d-3)])))
+    Sigma <- ((delta)%*%t(delta) )* Sigma
+    return(Sigma)
+  },
+  get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
+    return(Sigma)
+  },
+  
+  get_mean = function(param, obj, time = 'time'){
+    #TODO
+    m <- rep(0, length(obj[[time]]))
+    return(m)
+  },
+  
+  get_Amean = function(param, obj, time = 'time'){
+    return(self$get_mean(param, obj, time = 'time'))
+  },
+  get_A  = function(param, obj){
+    return(NULL)
+  }
+))
+
