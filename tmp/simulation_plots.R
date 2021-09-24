@@ -37,12 +37,14 @@ dat <- data.frame(ce_type,d1,true_rtmax,Model,rtmax)
 ggplot(dat,aes(d1,rtmax))+
   facet_wrap(vars(ce_type))+
   geom_point(aes(color=Model)) +
-  geom_line(aes(color=Model,linetype=Model)) +
+  geom_line(aes(color=Model,linetype=Model),size=1) +
   theme_bw() +
   scale_x_continuous(breaks=c(-0.08,-0.05,-0.03,0.00))+
   geom_point(aes(d1,true_rtmax))+
   xlab(expression(delta [1])) +
-  ylab("r(tmax)")
+  ylab(expression(r(t [max]))) +
+  theme(legend.text=element_text(size=11))
+
 
 # one plot for each model
 ggplot(dat,aes(d1,rtmax))+
