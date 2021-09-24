@@ -77,10 +77,19 @@ Latent.data.con <- data.frame(time  = Latent.con[,1],
 pl1 <- ggplot(data=Latent.data, 
               aes(x=time,y=U )) + 
   geom_line(size=0.5,alpha=0.2) + 
-  geom_point(data=Obs.data, aes(x=time,y=y) ,size=3)+ xlab("t") + ylab("y_t,P(t)") 
-pl1 <- pl1 +  facet_wrap(~I, ncol = 2) 
-if(save.fig)
+  geom_point(data=Obs.data, aes(x=time,y=y),size=3)+
+  xlab("Time") + 
+  ylab(expression(paste(y[t], ",P(t)")))
+
+pl1 <- pl1 + facet_wrap(~I, ncol = 2) + theme_bw()+
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11))
+
+if(save.fig) {
   ggsave('Figure_GP_obs.pdf', pl1)
+}
 print(pl1)
 con.data <- rbind(Latent.data,Latent.data.con)
 con.data$c <- as.factor(con.data$c)
@@ -93,8 +102,15 @@ pl2 <- ggplot(data=con.data,
        scale_linetype_manual(name=expression(delta),
                              values=c("dashed", "solid"), 
                              labels = c(0, delta)) +
-       xlab("time") + ylab("GP(time)") + theme(legend.key.size = unit(0.9 , 'cm'))
-pl2 <- pl2 +  facet_wrap(~I, ncol = 2) 
+       xlab("Time") + ylab("GP(time)") + theme(legend.key.size = unit(0.9 , 'cm'))
+
+pl2 <- pl2 +  facet_wrap(~I, ncol = 2) + theme_bw()+
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        legend.text=element_text(size=14),
+        legend.title=element_text(size=14))
 print(pl2)
 if(save.fig)
   ggsave('Figure_GP_cons.pdf', pl2)
