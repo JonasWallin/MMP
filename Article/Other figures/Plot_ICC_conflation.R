@@ -1,11 +1,7 @@
 ## Generate data for illustration of delta_Y and delta_G
+
 library(ggplot2)
 library(gridExtra)
-library(multilevel)
-library(psych)
-library(dplyr)
-
-
 
 
 gendat <- function(timepoints, persons, groups, g0, sg, sy, dg, dy) {
@@ -34,7 +30,7 @@ data1$person2 <- "0"
 data1$person2 <- ifelse(data1$person == 1, "1", data1$person2)
 data1$person2 <- ifelse(data1$person == 2, "2", data1$person2)
 data1$person2 <- ifelse(data1$person == 3, "3", data1$person2)
-
+# data1$person2 <- as.character(data1$person)
 
 
 pl1 <- ggplot(data=data1, aes(x=time,y=y)) + 
