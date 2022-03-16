@@ -1,5 +1,9 @@
 ## illustration of the different types of consensus assumed by the models
 # date: 2021-06-16
+# last updated: 2022-03-16
+
+library(dplyr)
+library(ggplot2)
 
 # cei = Homogeneous Consensus Emergence
 # cem = Heterogeneous Consensus Emergence
@@ -34,3 +38,23 @@ ggplot(dat) +
   labs(title ="Consensus emergence patterns") +
   xlab("Individual") +
   ylab("Y")
+
+
+# for presentation
+ggplot(dat) + 
+  geom_col(aes(p,y)) + 
+  facet_grid(cols=vars(time),rows = vars(type),labeller = labeller(time=time.labs)) + 
+  theme_bw() +
+  #labs(title ="Consensus emergence patterns") +
+  xlab("Individual") +
+  ylab("Y")
+
+ggplot(dat) + 
+  geom_col(aes(p,y)) + 
+  geom_abline(aes(p,y), intercept = 8, slope = 0) +
+  facet_grid(cols=vars(time),rows = vars(type),labeller = labeller(time=time.labs)) + 
+  theme_bw() +
+  #labs(title ="Consensus emergence patterns") +
+  xlab("Individual") +
+  ylab("Y")
+
