@@ -90,6 +90,7 @@ pl1 <- pl1 + facet_wrap(~I, ncol = 2) + theme_bw()+
 if(save.fig) {
   ggsave('Figure_GP_obs.pdf', pl1)
 }
+
 print(pl1)
 con.data <- rbind(Latent.data,Latent.data.con)
 con.data$c <- as.factor(con.data$c)
@@ -114,3 +115,39 @@ pl2 <- pl2 +  facet_wrap(~I, ncol = 2) + theme_bw()+
 print(pl2)
 if(save.fig)
   ggsave('Figure_GP_cons.pdf', pl2)
+
+## For presentation
+pl3 <- ggplot(data=subset(Latent.data,I==3), 
+              aes(x=time,y=U )) + 
+  geom_line(size=1,alpha=0.5, col="red") + 
+  geom_point(data=subset(Obs.data,I==3), aes(x=time,y=y),size=3)+
+  xlab("Time") + 
+  ylab(expression(paste(y[t], ",P(t)"))) +
+  theme_bw() +
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11))
+
+pl4 <- ggplot(data=subset(con.data,I==3), 
+              aes(x=time,y=U, color=c,linetype=c)) + 
+  geom_line(size=1,alpha=1) +
+  #geom_abline(intercept = 0.9032, slope = 0.1119) +
+  scale_color_manual(name=element_blank(),
+                     values = c("black", "red"),
+                     labels = c("Traditional", expression(paste("With ",delta, sep=""))))+
+  scale_linetype_manual(name=element_blank(),
+                        values=c("dashed", "solid"), 
+                        labels = c("Traditional", expression(paste("With ",delta, sep="")))) +
+  xlab("Time") + ylab("GP(t)") + theme(legend.key.size = unit(0.9 , 'cm'))
+
+pl4 <- pl4 +  #facet_wrap(~I, ncol = 2) + 
+  theme_bw()+
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        legend.text=element_text(size=26),
+        legend.title=element_text(size=14),
+        legend.text.align = 0)
+print(pl4)

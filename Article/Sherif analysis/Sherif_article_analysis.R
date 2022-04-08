@@ -14,6 +14,7 @@
 
 library(MMP)
 library(tidyverse)
+library(ggplot2)
 
 ## Data preparation
 data("sherifdat")
@@ -94,9 +95,12 @@ weigths <- akaike.weight(list(CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h),
 round(weigths[,5],2)
 
 # r plot 
-r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),
+rp <- r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),
        sherifdat$y,sherifdat$group, sherifdat$time, 
-       names = c("GP","HomCEM","HetCEM","GP GP","HomCEM GP","HetCEM GP"))
+       names = c("GP","HomCEM","HetCEM","GP NLT","HomCEM NLT","HetCEM NLT"))
+rp + theme(legend.position=c(0.8, 0.8),
+           legend.background = element_rect(size=0.5, linetype="solid",colour ="darkgrey"))
+# saved 6 x 6 inches
 
 ## smoothing plots 
 # Linear team dynamics
@@ -106,7 +110,11 @@ smooth.plot(models=list(CEM2,CEI2,GP),
              time = sherifdat$time, 
              y = sherifdat$y,
              groups.to.plot = c(1,8), 
-             names = c("HetCEM", "HomCEM", "GP"))
+             names = c("HetCEM", "HomCEM", "GP")) +
+  theme(legend.position = "bottom") +
+  scale_y_continuous(breaks=c(0,4,8)) 
+  
+# saved 6 x 6 inches
 
 # Nonlinear team dynamics
 smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
@@ -115,7 +123,35 @@ smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
             time = sherifdat$time, 
             y = sherifdat$y,
             groups.to.plot = c(1,8), 
-            names = c("HetCEM GP", "HomCEM GP", "GP GP"))
+            names = c("HetCEM NLT", "HomCEM NLT", "GP NLT")) +
+            #theme(legend.position=c(0.8, 0.8),
+            #legend.background = element_rect(size=0.3, linetype="solid",colour ="darkgrey"))
+  theme(legend.position = "bottom")
+# saved 6 x 6 inches
+
+# for presentation:
+# NLT
+smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("HetCEM NLT", "HomCEM NLT", "GP NLT")) +
+  theme(legend.position = "right",legend.justification = "bottom")
+
+# LT
+# Linear team dynamics
+smooth.plot(models=list(CEM2,CEI2,GP),
+            group = sherifdat$group,
+            person = sherifdat$person, 
+            time = sherifdat$time, 
+            y = sherifdat$y,
+            groups.to.plot = c(1,8), 
+            names = c("HetCEM", "HomCEM", "GP")) +
+  theme(legend.position = "right",legend.justification = "bottom") +
+  scale_y_continuous(breaks=c(0,4,8)) 
+
 
 # separate plots for each model with vs without nonlinear team dynamics
 # (not included in article)

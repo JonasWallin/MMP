@@ -41,20 +41,51 @@ ggplot(dat) +
 
 
 # for presentation
-ggplot(dat) + 
-  geom_col(aes(p,y)) + 
-  facet_grid(cols=vars(time),rows = vars(type),labeller = labeller(time=time.labs)) + 
-  theme_bw() +
-  #labs(title ="Consensus emergence patterns") +
-  xlab("Individual") +
-  ylab("Y")
+ce.labs <- c("Heterogeneous", "Homogeneous")
+names(ce.labs) <- c("Heterogeneous CE", "Homogeneous CE")
+
 
 ggplot(dat) + 
   geom_col(aes(p,y)) + 
-  geom_abline(aes(p,y), intercept = 8, slope = 0) +
-  facet_grid(cols=vars(time),rows = vars(type),labeller = labeller(time=time.labs)) + 
+  geom_abline(intercept = 8, slope = 0) +
+  facet_grid(cols=vars(time),rows = vars(type),
+             labeller = labeller(time=time.labs, type=ce.labs)) + 
   theme_bw() +
   #labs(title ="Consensus emergence patterns") +
   xlab("Individual") +
-  ylab("Y")
+  scale_y_continuous(name=element_blank(),limits=c(0, 15)) +
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        strip.text.y = element_text(size = 20))
+
+ 
+ggplot(subset(dat,type=="Homogeneous CE")) + 
+  geom_col(aes(p,y)) + 
+  geom_abline(intercept = 8, slope = 0) +
+  facet_grid(cols=vars(time),
+             labeller = labeller(time=time.labs)) + 
+  theme_bw() +
+  #xlab("Individual") +
+  scale_y_continuous(name=element_blank(),limits=c(0, 15)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        strip.text.y = element_text(size = 20))
+
+ggplot(subset(dat,type=="Heterogeneous CE")) + 
+  geom_col(aes(p,y)) + 
+  geom_abline(intercept = 8, slope = 0) +
+  facet_grid(cols=vars(time),
+             labeller = labeller(time=time.labs)) + 
+  theme_bw() +
+  #xlab("Individual") +
+  scale_y_continuous(name=element_blank(),limits=c(0, 15)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        strip.text.y = element_text(size = 20))
 
