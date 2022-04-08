@@ -6,14 +6,14 @@
 graphics.off()
 library(ggplot2)
 library(MMP)
-set.seed(3)
+set.seed(8)
 save.fig = F
 n.indv <- 4
 T_     <- 4
 delta = -0.2
 n.grid <- 500
 n.obs  <- 5
-Maternparam <- log(c(1.,1.,2.5))
+Maternparam <- log(c(1,3,2.4))
 sigma_Y <- 0.1
 grid       <- seq(0,T_, length.out = n.grid)
 grid.obs   <- seq(1,n.grid, by=ceiling(n.grid/n.obs))
@@ -25,7 +25,7 @@ Matern_input   <-  list(D =    grid,
 Sigma_con  <- Matern_cov$get_Cov(c(delta,Maternparam), Matern_input)
 L.con      <- t(chol(Sigma_con))
 Indivauls <- list()
-Z <- c(0,0.2)
+Z <- c(0.,0.)
 Latent      <- c()
 Latent.con  <- c()
 Obs         <- c()
