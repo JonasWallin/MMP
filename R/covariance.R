@@ -136,8 +136,8 @@ expWeightDiag <- R6::R6Class("expWeightDiag", list(
   get_name = function(){return('diagonal exp')},
   get_param_length = function(){return(self$d)},
   get_Cov = function(param,obj, cov_name = 'E') {
-
-    Sigma <- diag(c(exp(obj[[cov_name]]%*%param)))
+    diagonal <- c(exp(obj[[cov_name]]%*%param))
+    Sigma <- diag(diagonal, nrow=length(diagonal))
     return(Sigma)
   },
   get_AtCA  = function(param, obj, cov_name = 'E'){
