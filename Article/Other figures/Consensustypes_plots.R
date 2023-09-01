@@ -35,9 +35,13 @@ ggplot(dat) +
   geom_col(aes(p,y)) + 
   facet_grid(cols=vars(time),rows = vars(type),labeller = labeller(time=time.labs)) + 
   theme_bw() +
-  labs(title ="Consensus emergence patterns") +
+  #labs(title ="Consensus emergence patterns") +
   xlab("Individual") +
-  ylab("Y")
+  theme(axis.title.x = element_text(size = 14),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        strip.text.y = element_text(size = 16))
 
 
 # for presentation
