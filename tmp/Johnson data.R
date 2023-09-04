@@ -10,19 +10,8 @@ library(dplyr)
 PCEraw <- read_excel("~/Library/CloudStorage/Dropbox/buisness/Projekt 2 Team Emergence YB JW FD/Johnson et al 2014 JOM/Johnson et al - 2014 - JoM - special issue Bayes - team performance with ineq constrained hypo/1. Data/1. Raw/PCE dataset 08Jan2012.xlsx", 
                      sheet = "student", na = ".")
 
-grps <- PCEraw %>% 
-  group_by(grp) %>% 
-  summarise(length(unique(ids)))
-
-idnumbers <- PCEraw %>% 
-  group_by(grp) %>% 
-  summarise(min(ids),max(ids))
-
+# recode individual id to range from 1-6 within each group
 PCEraw$person <- PCEraw$ids-6*(PCEraw$grp-1)
-
-idnumbers <- PCEraw %>% 
-  group_by(grp) %>% 
-  summarise(min(ids),max(ids),min(person),max(person))
 
 # exclude groups with only first two time points
 PCEsub <- subset(PCEraw, 
@@ -33,9 +22,9 @@ PCEsub <- subset(PCEraw,
                  & grp!=43 & grp!=52 & grp!=53 & grp!=54
                  & grp!=57)
 
-idn <- PCEsub %>% 
-  group_by(grp) %>% 
-  summarise(min(ids),max(ids),min(person),max(person))
+# save full data
+saveRDS(PCEraw, file = "PCEraw.Rdata")
+
 
 # goal setting
 ggplot(PCEsub)+

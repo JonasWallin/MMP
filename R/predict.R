@@ -84,6 +84,8 @@ predict.indv <- function(param, Obj, Obj.orig){
 predict.ce <- function(ce.object, new.data, return.all = F){
   
   #add NA.data to new
+  # 2023-09-04 (YB): this also creates NAs in the group variable
+  # if it is not named "group", TODO: fix this
   data <- bind_rows(new.data,ce.object$model$data)
   pred.data <- getData(ce.object$model$`Fixed effects`[[1]], 
                   ce.object$model$`Individual random effects`[[1]], 
