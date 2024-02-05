@@ -1,6 +1,6 @@
 library(MMP)
 
-data <- readRDS("tmp/Postervar_delta_6.Rdata")
+data <- readRDS("Postervar_delta_6.Rdata")
 
 data6 <- data[[2]]
 data6_miss <- data6[-data$indices[[3]],]

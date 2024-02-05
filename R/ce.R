@@ -9,7 +9,8 @@ ce <- function(formula1,
                method.team = NULL,
                time = NULL,
                data.in,
-               REML = F) {
+               REML = F,
+               GP.type="OU.homeostasis") {
   
   data <- getData(formula1, 
                   formula2, 
@@ -29,9 +30,10 @@ ce <- function(formula1,
                 'Method'                    = method,
                 'Team process'              = method.team,
                 'Time'                      = time,
-                'data'                      = data.in)
+                'data'                      = data.in,
+                "GP.type"                   = GP.type)
   
-  
+  data$GP.type = GP.type
   object <- dataToObject(data)
   
   param <- param0(object)

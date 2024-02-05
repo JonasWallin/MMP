@@ -407,4 +407,54 @@ MaternConsenus <- R6::R6Class("Matern consensus", list(
     return(NULL)
   }
 ))
+#' Brownian moition parameter with N(0, param[1]) at time point zero.
+#' after we have x_t - x_{t-s} \sim N(0, exp( (t-s)exp(t*param[2]) )
+#' Assumes time is sorted smallest to largest
+#' Time must start from zero
+BM.homeostasis <- R6::R6Class("BM.homeostasis", list(
+  d = NULL,
+  tmin = NULL,
+  tmax = NULL,
+  initialize = function(d_D) {
+    self$d<-  1 + d_D },
+  get_name = function(){return('BM.homeostasis')},
+  get_param_length = function(){return(self$d)},
+  get_Cov = function(param, obj, cov_name = 'D', time = 'time') {
+    
+    
+    Sigma <- matrix(0, 
+                    nrow = length(obj[[time]]),
+                    ncol = length(obj[[time]]))
+    # time < delta
+    
+    time <- obj[[time]]
 
+    
+    # homeostasis effect
+    delta <- c(exp(param[self$d] + obj[[cov_name]]%*%as.vector(param[1:(self$d-1)])))
+    m <- matrix( NA, nr=length(time), nc=length(time) ) # Empty matrix with the right size
+    m <- pmin( col(m), row(m) )
+    time_delta <- cumsum(c(0,diff(time)*delta[2:length(time)]))
+    Sigma <-   matrix(time_delta[m],nrow=(length(time))) 
+    
+    
+    return(Sigma)
+  },
+  get_AtCA  = function(param, obj,cov_name ='D', time = 'time'){
+    Sigma <- self$get_Cov(param, obj, cov_name = cov_name, time = time)
+    return(Sigma)
+  },
+  
+  get_mean = function(param, obj, time = 'time'){
+    #TODO
+    m <- rep(0, length(obj[[time]]))
+    return(m)
+  },
+  
+  get_Amean = function(param, obj, time = 'time'){
+    return(self$get_mean(param, obj, time = 'time'))
+  },
+  get_A  = function(param, obj){
+    return(NULL)
+  }
+))

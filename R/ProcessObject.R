@@ -165,7 +165,10 @@ dataToObject <- function(data_list, Teams = NULL){
     count <- count + 1
   }
   if(is.null(TI)==F){
-    TeamObj$indvCovs[[count]] <- OU.homeostasis$new(1) # two parameters time and delta 
+    if(data[["GP.type"]] == "OU.homeostasis")
+      TeamObj$indvCovs[[count]] <- OU.homeostasis$new(1) # two parameters time and delta 
+    if(data[["GP.type"]] == "BM.homeostasis")
+      TeamObj$indvCovs[[count]] <- BM.homeostasis$new(1) # two parameters time and delta 
     #OUbridge$new(min(time), max(time), dim(TI)[2])
     count <- count + 1
   }
