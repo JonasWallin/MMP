@@ -74,14 +74,14 @@ Latent.data.con <- data.frame(time  = Latent.con[,1],
 
 
 
-pl1 <- ggplot(data=Latent.data, 
+pl1 <- ggplot(data=subset(Latent.data,I<3), 
               aes(x=time,y=U )) + 
   geom_line(size=0.5,alpha=0.2) + 
-  geom_point(data=Obs.data, aes(x=time,y=y),size=3)+
+  geom_point(data=subset(Obs.data, I<3), aes(x=time,y=y),size=3)+
   xlab("Time") + 
   ylab(expression(paste(y[t], ",P(t)")))
 
-pl1 <- pl1 + facet_wrap(~I, ncol = 2) + theme_bw()+
+pl1 <- pl1 + facet_wrap(~I, ncol = 1) + theme_bw()+
   theme(axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 11),
@@ -94,7 +94,7 @@ if(save.fig) {
 print(pl1)
 con.data <- rbind(Latent.data,Latent.data.con)
 con.data$c <- as.factor(con.data$c)
-pl2 <- ggplot(data=con.data, 
+pl2 <- ggplot(data=subset(con.data, I<3), 
               aes(x=time,y=U, color=c,
               linetype=c)) + 
        geom_line(size=1,alpha=1) +
@@ -105,16 +105,25 @@ pl2 <- ggplot(data=con.data,
                              labels = c(0, delta)) +
        xlab("Time") + ylab("GP(time)") + theme(legend.key.size = unit(0.9 , 'cm'))
 
-pl2 <- pl2 +  facet_wrap(~I, ncol = 2) + theme_bw()+
+pl2 <- pl2 +  facet_wrap(~I, ncol = 1) + theme_bw()+
   theme(axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 11),
         axis.text.y = element_text(size = 11),
-        legend.text=element_text(size=14),
-        legend.title=element_text(size=14))
+        legend.text=element_text(size=18),
+        legend.title=element_text(size=20),
+        legend.position = c(0.8, 0.9),
+        legend.background = element_rect(fill="white",
+                                         size=0.5, linetype="solid", 
+                                         colour ="darkgrey"))
+        
+
 print(pl2)
 if(save.fig)
   ggsave('Figure_GP_cons.pdf', pl2)
+
+
+
 
 ## For presentation
 pl3 <- ggplot(data=subset(Latent.data,I==3), 
@@ -129,10 +138,9 @@ pl3 <- ggplot(data=subset(Latent.data,I==3),
         axis.text.x = element_text(size = 11),
         axis.text.y = element_text(size = 11))
 
-pl4 <- ggplot(data=subset(con.data,I==3), 
+pl4 <- ggplot(data=subset(con.data,I==2), 
               aes(x=time,y=U, color=c,linetype=c)) + 
   geom_line(size=1,alpha=1) +
-  #geom_abline(intercept = 0.9032, slope = 0.1119) +
   scale_color_manual(name=element_blank(),
                      values = c("black", "red"),
                      labels = c("Traditional", expression(paste("With ",delta, sep=""))))+

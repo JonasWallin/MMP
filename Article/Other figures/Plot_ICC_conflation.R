@@ -2,7 +2,7 @@
 
 library(ggplot2)
 library(gridExtra)
-
+library(ggpubr)
 
 gendat <- function(timepoints, persons, groups, g0, sg, sy, dg, dy) {
   dat=expand.grid(time=0:(timepoints-1),
@@ -59,7 +59,29 @@ pl1 <- pl1 +
         
 
 print(pl1)
-
+pl1 <- ggplot(data=data1, aes(x=time,y=y)) + 
+  geom_line(aes(linetype=person2))+
+  geom_point(size=1.5, aes(x=time,y=y)) +
+  xlab("time") + 
+  ylab("y")  
+#  ggtitle("Case 2: "~delta[P]==0~", "~delta[G]==.6, 
+#          subtitle = expression("ICC: "~t[0]==.50~", "~t[1]==.77~", "~t[2]==.92~", "~t[3]==.97)) + 
+#  labs(shape = "Person within group")
+pl1 <- pl1 +  
+  facet_wrap(~group)  + 
+  theme_classic(base_size = 12) + #guides(shape="none" ) + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8))+
+  scale_color_discrete(guide="none")+
+  scale_linetype_discrete(guide="none")
+#theme(legend.text=element_text(size=12),
+#      legend.title=element_text(size=12),
+#axis.text.x = element_text(size = 11),
+#axis.text.y = element_text(size = 11),  
+#     axis.title.x = element_text(size = 12),
+#      axis.title.y = element_text(size = 12),
+#      plot.title = element_text(size=12),
+#      plot.subtitle = element_text(size=10))
+pl1
 
 ## case 2
 data2 <- gendat(timepoints = 4, persons = 4, groups = 4, g0=0, sg=1, sy=1, dg=.6, dy=0)
@@ -94,3 +116,34 @@ pl2 <- pl2 +
 print(pl2)
 
 grid.arrange(pl1, pl2, ncol=2)
+
+pl2 <- ggplot(data=data2, aes(x=time,y=y)) + 
+  #geom_line(aes(linetype=person2,col=person2))+
+  geom_line(aes(linetype=person2))+
+#  geom_point(size=1.5, aes(x=time,y=y, col=person2)) +
+  geom_point(size=1.5, aes(x=time,y=y)) +
+  xlab("time") + 
+  ylab("y")  
+#  ggtitle("Case 2: "~delta[P]==0~", "~delta[G]==.6, 
+#          subtitle = expression("ICC: "~t[0]==.50~", "~t[1]==.77~", "~t[2]==.92~", "~t[3]==.97)) + 
+#  labs(shape = "Person within group")
+pl2 <- pl2 +  
+  facet_wrap(~group)  + 
+  theme_classic(base_size = 12) + #guides(shape="none" ) + 
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8))+
+  scale_color_discrete(guide="none")+
+  scale_linetype_discrete(guide="none")
+  #theme(legend.text=element_text(size=12),
+  #      legend.title=element_text(size=12),
+        #axis.text.x = element_text(size = 11),
+        #axis.text.y = element_text(size = 11),  
+  #     axis.title.x = element_text(size = 12),
+  #      axis.title.y = element_text(size = 12),
+  #      plot.title = element_text(size=12),
+  #      plot.subtitle = element_text(size=10))
+pl2
+
+
+fig <- ggarrange(pl1, pl2, labels = c("A","B"),
+          common.legend = TRUE, legend = "bottom")
+ggsave("ICC_conflation_v2.pdf",fig)
