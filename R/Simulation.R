@@ -44,8 +44,7 @@ gendat_HeCEGP <- function(l3n,l2n,l1n,
   time <- 0:(l1n-1)
   Dist <- as.matrix(dist(time))
   
-  ## räkna ut kappa om vi vill ha correlation x mellan 
-  ## längsta avståndet i data
+ 
   k <- max(Dist)/(-log(corr))
   
   param <- c(log(sqrt((2 * 1/k) *sgp)), -log(k)) # exp(param[2] ) = 1/k 
@@ -112,9 +111,8 @@ gendat_HoCEGP <- function(l3n,l2n,l1n,
   
   time <- 0:(l1n-1)
   Dist <- as.matrix(dist(time))
+ 
   
-  ## räkna ut kappa om vi vill ha correlation x mellan 
-  ## längsta avståndet i data
   k <- max(Dist)/(-log(corr))
   
   param <- c(log(sqrt((2 * 1/k) *sgp)), -log(k)) # exp(param[2] ) = 1/k 
@@ -421,8 +419,7 @@ gendat_IGP <- function(l3n,l2n,l1n,
   time <- 0:(l1n-1)
   Dist <- as.matrix(dist(time))
   
-  ## räkna ut kappa om vi vill ha correlation x mellan 
-  ## längsta avståndet i data
+  
   x <- 0.05 # correlation
   k <- max(Dist)/(-log(x))
   
@@ -488,8 +485,7 @@ gendat_IIGP <- function(l3n,l2n,l1n,
   time <- 0:(l1n-1)
   Dist <- as.matrix(dist(time))
   
-  ## räkna ut kappa om vi vill ha correlation x mellan 
-  ## längsta avståndet i data
+  
   x <- 0.05 # correlation
   k <- max(Dist)/(-log(x))
   

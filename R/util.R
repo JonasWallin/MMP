@@ -273,3 +273,39 @@ param0 <- function(obj){
   return(param)
 }
 
+
+#'function for collecting covariance of an indivual
+#' @return SigmaE - measurement covariance
+#'         SigmaI - indivual covariance
+#'         SigmaT - team covariance
+#'         Sigma  - the sum  
+get.Cov <- function(paramList, object, team.id=1, Indv.id=1){
+  
+  
+  Team_i <- object$teams[[team.id]]
+  SigmaE    <- matrix(0, nrow = Team_i$n_obs,
+                      ncol = Team_i$n_obs)
+  for(i in 1:length(object$errorCovs)){
+    diag(SigmaE) <- diag(SigmaE) + object$errorCovs[[i]]$add_diagonal(paramList$error[[i]], Team_i)
+  }
+  
+  Indv_i <-  Team_i$indv[[Indv.id]]
+  SigmaE <- SigmaE[Indv_i$A_list, Indv_i$A_list]
+  SigmaI  <- matrix(0,
+                    nrow = Indv_i$n,
+                    ncol = Indv_i$n)
+  for(iii in 1:length(object$indvCovs)){
+    SigmaI <- SigmaI + object$indvCovs[[iii]]$get_AtCA(paramList$indv[[iii]], Indv_i)
+  }
+  
+  SigmaT <-  matrix(0, nrow = Team_i$n_obs,
+                    ncol = Team_i$n_obs)
+  for(ii in 1:length(object$teamCovs))
+    SigmaT <- SigmaT + as.matrix(object$teamCovs[[ii]]$get_AtCA(paramList$team[[ii]], Team_i))
+  SigmaT <- SigmaT[Indv_i$A_list, Indv_i$A_list]
+  return(list(SigmaE = SigmaE,
+              SigmaI = SigmaI,
+              SigmaT = SigmaT,
+              Sigma = SigmaE+SigmaI+SigmaT))
+}
+

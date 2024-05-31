@@ -10,7 +10,8 @@ ce <- function(formula1,
                time = NULL,
                data.in,
                REML = F,
-               GP.type="OU.homeostasis") {
+               GP.type="OU.homeostasis",
+               param = NULL) {
   
   data <- getData(formula1, 
                   formula2, 
@@ -35,8 +36,8 @@ ce <- function(formula1,
   
   data$GP.type = GP.type
   object <- dataToObject(data)
-  
-  param <- param0(object)
+  if(is.null(param))
+    param <- param0(object)
   
   if (model$Method == "GP") {
   

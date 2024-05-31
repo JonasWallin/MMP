@@ -1,5 +1,3 @@
-
-
 #'
 #' creates optimization object, need to be ordered within team, indv
 #'
@@ -10,7 +8,7 @@
 #' Xf        - fixed effects
 #' XI        - individual effects (random)
 #' XT        - team effects (random)
-#' WLI       - linear weighting individual effect # döp om, ta bort weighting sen
+#' WLI       - linear weighting individual effect 
 #' WLT       - linear weighting team effect
 #' WEI       - exponential weighting individual effect
 #' WII       - independent weighting of inidvual effect 
@@ -19,13 +17,11 @@
 #' time      - (n x 1) time point of observations
 #' WNOISE    - covariates to the measurement error
 #' dataOrder - for filtering
-
 #'
 #'
 #' @param data_list
-#' 
 #'        $method.team - method for time series team (allow null)
-#'
+#'@export
 dataToObject <- function(data_list, Teams = NULL){
   
   # data_list - output list from function getData()
