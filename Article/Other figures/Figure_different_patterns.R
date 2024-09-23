@@ -8,7 +8,7 @@ library(MMP)
 set.seed(22)
 save.fig = F
 T_     <- 4
-delta = -0.2
+delta = -0.4
 n.grid <- 500
 n.obs  <- 5
 Maternparam <- log(c(1,3,2.4)) #sigma, kappa, nu
@@ -41,6 +41,7 @@ pl1 <- ggplot(data=fig.data) +
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
+  theme_bw()+
   ylab("")
 print(pl1)
 
@@ -55,6 +56,7 @@ pl2 <- ggplot(data=fig.data) +
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
+  theme_bw()+
   ylab("")
 print(pl2)
 
@@ -70,5 +72,15 @@ pl3 <- ggplot(data=fig.data) +
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
+  theme_bw()+
   ylab("")
 print(pl3)
+
+plot_all <- ggarrange(pl3,pl1,pl2, 
+                      labels = c("Homogeneous", "Gaussian Process", "Heterogeneous"),
+                      ncol = 3, nrow = 1,
+                      common.legend = T,
+                      legend="bottom")
+plot_all
+ggsave("pattern_plot_with_GP.pdf",plot_all)  
+
