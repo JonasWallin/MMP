@@ -1,8 +1,4 @@
-
-
-
 # Johnson data JoM (2014)
-# 2023-09-04
 # see coding info in:
 # /Dropbox/buisness/Projekt 2 Team Emergence YB JW FD/Johnson et al 2014 JOM
 # /Johnson et al - 2014 - JoM - special issue Bayes - team performance with ineq constrained hypo
@@ -11,10 +7,10 @@ library(MMP)
 library(ggplot2)
 library(readxl)
 library(dplyr)
-#library(misty)
+library(misty)
 data.folder <- "../../Dropbox/articles/buisness/Projekt 2 Team Emergence YB JW FD/Johnson et al 2014 JOM/data/Data/Formatted/"
 dat <- read.csv(paste(data.folder,"pce_data_wide.dat",sep=""),sep=",",header=F)
-varnames <- read.mplus(input =  paste(data.folder,"PCE_data_wide.inp",sep=""), return.var = TRUE)
+varnames <- misty::read.mplus(input =  paste(data.folder,"PCE_data_wide.inp",sep=""), return.var = TRUE)
 colnames(dat) <- varnames
 data.group <- dat[,c("grp","prf1","prf3","prf6","prf9","prf13","prf16","prf17","prf19","prf21")]
 group.low <-unique(data.group[data.group$prf21<=12,"grp"])
@@ -71,7 +67,11 @@ data.tru <- PCEsub[,vars[9:11]]
 
 results_tru <- process_data(data.tru, "tru")
 
-data.vis <- results_tru$data[results_tru$data$group%in%group.id[1:10],]
+###
+#
+###
+group.id <- unique(results_tru$data$group)
+data.vis <- results_tru$data[results_tru$data$group%in%group.id[21:30],]
 
 pl1 <- ggplot(data=data.vis, 
               aes(x=time,y=y, linetype = factor(person))) + 

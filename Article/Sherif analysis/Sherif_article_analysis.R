@@ -1,29 +1,50 @@
-### Sherif data analysis for article
-### date: 2021-02-22
+### reproduction of Sherif data analysis 
 
-## Things to rename:
-# CEM2 = HetCEM
-# CEI2 = HomCEM
-# CEM2.h = HetCEM with nonlinear team dynamics
-# CEI2.h = HomCEM with nonlinear team dynamics
-# GP.h = GP model with nonlinear team dynamics
-# method.team name "OU.homeostasis" = "nonlinear" (or something similar)
 
-# Note: use summary.ce(model_name) to obtain a model summary,
-# e.g. summary.ce(CEM2)
 
 library(MMP)
 library(tidyverse)
 library(ggplot2)
+library(xtable)
+library(latex2exp)
+library(ggpubr)
 
 ## Data preparation
 data("sherifdat")
-# excluding last time point (individual measurement)
-sherifdat <- subset(sherifdat, time <= 2)
-# recode time to start from 0
 sherifdat$time <- sherifdat$time + 1
 
-## Linear team dynamics
+#######
+#Figure 3
+#######
+fig1 <- ggplot(data=sherifdat, 
+               aes(x=time,y=y, linetype = factor(person, labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
+  geom_line(size=0.5) + xlab("Time") + ylab("Inches") +
+  guides(linetype=guide_legend(title="Subjects within each group")) +
+  scale_x_continuous(sec.axis = sec_axis(~.*1,labels = c("indv", "group", "group", "group", "indv" )))
+
+fig1 <- fig1 +  facet_wrap(~group, ncol = 4) + 
+  # labs(title = "Sherif (1935) autokinetic data") + 
+  theme_bw() +
+  theme(legend.position="bottom") +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        #axis.text.x = element_text(size = 11),
+        #axis.text.y = element_text(size = 11),  
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
+
+
+print(fig1)
+
+
+
+#### 
+# Fitting all the models
+####
+# excluding last time point (individual measurement)
+sherifdat <- subset(sherifdat, time <= 3)
+
+## Linear group dynamics
 # null model 
 null <- ce(y ~ 1+time, 
            ~ 1 | person, 
@@ -58,7 +79,7 @@ GP <- ce(y ~ 1+time,
          time = "time",
          data = sherifdat)
 
-## Nonlinear team dynamics
+## Gaussian process team dynamics
 # HetCEM
 CEM2.h <- ce(y ~ 1+time, 
              ~ 1 | person, 
@@ -89,94 +110,86 @@ GP.h <- ce(y ~ 1+time,
            time = "time",
            data = sherifdat)
 
-# Akaike weights
-weigths <- akaike.weight(list(CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h), 
-                         c("CEM2","CEI2","GP","CEM2.h","CEI2.h","GP.h"))
-round(weigths[,5],2)
+#########
+#Table 1
+#########
+names <- c("L:null","L:HetCEM","L:HomCEM","L:GP","GP:HetCEM","GP:HomCEM","GP:GP")
+models <- list(null,CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h)
+Table <- akaike.weight(models, 
+                         names)
+Table <- data.frame(Model = Table$names,
+                    AIC =  sapply(models, function(i) i$AIC),
+                    loglik = sapply(models, function(i) i$loglik),
+                    "Akaike weight" =  Table$weight)
+Table$Akaike.weight <- round(Table$Akaike.weight,2)
+print(xtable::xtable(Table))
 
-# r plot 
-rp <- r.plot(list(GP,CEI2, CEM2,GP.h,CEI2.h, CEM2.h),
-       sherifdat$y,sherifdat$group, sherifdat$time, 
-       names = c("GP","HomCEM","HetCEM","GP NLT","HomCEM NLT","HetCEM NLT"))
-rp + theme(legend.position=c(0.8, 0.8),
-           legend.background = element_rect(size=0.5, linetype="solid",colour ="darkgrey"))
-# saved 6 x 6 inches
+###########
+# Table 3 (appendix)
+##########
 
-## smoothing plots 
-# Linear team dynamics
-smooth.plot(models=list(CEM2,CEI2,GP),
-             group = sherifdat$group,
-             person = sherifdat$person, 
-             time = sherifdat$time, 
-             y = sherifdat$y,
-             groups.to.plot = c(1,8), 
-             names = c("HetCEM", "HomCEM", "GP")) +
-  theme(legend.position = "bottom") +
-  scale_y_continuous(breaks=c(0,4,8)) 
-  
-# saved 6 x 6 inches
-
-# Nonlinear team dynamics
-smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("HetCEM NLT", "HomCEM NLT", "GP NLT")) +
-            #theme(legend.position=c(0.8, 0.8),
-            #legend.background = element_rect(size=0.3, linetype="solid",colour ="darkgrey"))
-  theme(legend.position = "bottom")
-# saved 6 x 6 inches
-
-# for presentation:
-# NLT
-smooth.plot(models=list(CEM2.h,CEI2.h,GP.h),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("HetCEM NLT", "HomCEM NLT", "GP NLT")) +
-  theme(legend.position = "right",legend.justification = "bottom")
-
-# LT
-# Linear team dynamics
-smooth.plot(models=list(CEM2,CEI2,GP),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("HetCEM", "HomCEM", "GP")) +
-  theme(legend.position = "right",legend.justification = "bottom") +
-  scale_y_continuous(breaks=c(0,4,8)) 
+Table3 <- c(CEI2.h$betas,  #betas
+            exp(2 * CEI2.h$covariances$indv[[1]]), #sigma^2_v0
+            exp(2 * CEI2.h$covariances$indv[[2]][2]), #sigma^2_v1
+            CEI2.h$covariances$indv[[2]][1], #delta_v
+            exp(2 * CEI2.h$covariances$team[[1]]), # sigma^2_tau0
+            exp(2 * CEI2.h$covariances$team[[2]][2]), # sigma^2_tau1
+            CEI2.h$covariances$team[[2]][1], #delta_tau
+            exp( CEI2.h$covariances$team[[2]][2]), #kappa_tau
+            exp(2 * CEI2.h$covariances$error[[1]]) #sigma2_eps
+            )  
+Table3 <- round(Table3,3)
+cat('Table3:\n')
+print(Table3)
 
 
-# separate plots for each model with vs without nonlinear team dynamics
-# (not included in article)
-smooth.plot(models=list(CEM2,CEM2.h),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("HetCEM","HetCEM GP"))
+##########
+#Figure 4
+##########
+#generating the variances of each component
+Covs <- get.Cov(CEI2.h$covariances,CEI2.h$object)
 
-smooth.plot(models=list(CEI2,CEI2.h),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("HomCEM","HomCEM GP"))
-
-smooth.plot(models=list(GP,GP.h),
-            group = sherifdat$group,
-            person = sherifdat$person, 
-            time = sherifdat$time, 
-            y = sherifdat$y,
-            groups.to.plot = c(1,8), 
-            names = c("GP","GP GP"))
+dat <- data.frame(t = 0:3, 
+                  VeY = diag(Covs$SigmaE),
+                  VP = diag(Covs$SigmaI),
+                  VG = diag(Covs$SigmaT))
+dat$tot <- rowSums(dat[,2:4])
+dat$PVeY <- dat$VeY/dat$tot
+dat$PVP <- dat$VP/dat$tot
+dat$PVG <- dat$VG/dat$tot
+dat$PVY <- dat$tot/dat$tot
+dat$VY <- dat$tot
 
 
+pvar <- dat %>% 
+  pivot_longer(c(VeY,VP,VG,VY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Variance") +
+  xlab("Time") +
+  #  scale_color_discrete(name="",labels = c("VeY" = TeX('$\\V[e^Y_{tij}]$'),"VG" = TeX('$\\V[G_{tij}]$'),"VP" = TeX('$\\V[P_{tij}]$'),"VY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  scale_linetype_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  theme(legend.position = "none")
+
+pperc <- dat %>% 
+  pivot_longer(c(PVeY,PVP,PVG,PVY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Proportion") +
+  xlab("Time") +
+  # scale_color_discrete(name="",labels = c("PVeY" = TeX('$\\V[e^Y_{tij}]$'),"PVG" = TeX('$\\V[G_{tij}]$'),"PVP" = TeX('$\\V[P_{tij}]$'),"PVY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  scale_linetype_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  theme(legend.position = "right")
+
+Figure4 <- ggpubr::ggarrange(pvar, pperc, 
+                      #labels = c("A", "B"),
+                      ncol = 2, nrow = 1,
+                      common.legend = T,
+                      legend="bottom")
+print(Figure4)

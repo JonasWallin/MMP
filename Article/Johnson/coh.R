@@ -1,5 +1,7 @@
 
-
+##
+# move to data processing
+## 
 
 # Johnson data JoM (2014)
 # 2023-09-04
@@ -13,6 +15,7 @@ library(readxl)
 library(dplyr)
 library(MASS)
 library(misty)
+
 data.folder <- "../../Dropbox/articles/buisness/Projekt 2 Team Emergence YB JW FD/Johnson et al 2014 JOM/data/Data/Formatted/"
 dat <- read.csv(paste(data.folder,"pce_data_wide.dat",sep=""),sep=",",header=F)
 varnames <- read.mplus(input =  paste(data.folder,"PCE_data_wide.inp",sep=""), return.var = TRUE)
@@ -74,6 +77,14 @@ cat('largest eigenvalue explains =',100*round(SigmaE$values[1]/sum(SigmaE$values
 cat('the corresponding eigenvector is:', round(SigmaE$vectors[,1],2),'\n')
 results_coh <- process_data(data.coh, "tru")
 
+###########################
+#File starts
+
+
+
+###
+# Figure 5
+###
 group.id <- unique(results_coh$data$group)
 data.vis <- results_coh$data[results_coh$data$group%in%group.id[21:30],]
 
@@ -91,13 +102,12 @@ pl1 <- pl1 +  facet_wrap(~group, ncol = 5) +
         #axis.text.y = element_text(size = 11),  
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12))
-
-if(save.fig){
-  ggsave("Cohesion.traj.pdf",pl1)
-}
 print(pl1)
 
-
+####
+# Fitting all the models parameters 
+# (using known starting point to imporve speed of convergence)
+###
 par.null  <- c(-4.2122558, -2.4602522, -4.8964796, -2.0860085, -2.9267910, -0.0183323)
 null.model <- ce(y ~ 1+time, 
               ~ 1 | person, 
@@ -208,31 +218,6 @@ Sigma_NUL_NL <- get.Cov(nul.NL$covariances, nul.NL$object)
 
 #table Loglik AIC 
 
-
-# bootstrap
-#' simulate data using get.Cov covariance
-simulate.data <- function(data, Sigmas){
-  
-  groups <- unique(data$group)
-  data.sim <- data
-  for(group in groups){
-    
-    group.data <- data[data$group==group,]
-    y.group <-  mvrnorm(n = 1, mu = rep(0,dim(Sigmas$SigmaT)[1]), Sigma = Sigmas$SigmaT)
-    indvs <- unique(group.data$person)
-    for(indv in indvs){
-      y.indv <-  mvrnorm(n = 1, mu = rep(0,dim(Sigmas$SigmaT)[1]), Sigma = Sigmas$SigmaI+Sigmas$SigmaE)
-      Y <-  y.indv + y.group
-      group.data$y[group.data$person==indv] = Y[match(group.data$time[group.data$person==indv],c(0,1,2,3))] 
-      
-    }
-    data.sim[data$group==group,] <- group.data
-  }
-  
-  
-  return(data.sim)
-  
-}
 model.select.lin <- data.frame(name=c("NULL","HEM","HOM","GP"),
                                loglik = c(null.model$loglik,CEM.hem$loglik, CEM.hom$loglik,GP$loglik),
                                AIC    = c(null.model$AIC,CEM.hem$AIC, CEM.hom$AIC,GP$AIC),
@@ -244,6 +229,9 @@ model.select.non <- data.frame(name=c("HEM","HOM","slope","GP"),
 model.select <- rbind(model.select.lin,model.select.non)
 model.select$wLik= round(exp(model.select$loglik)/sum(exp(model.select$loglik)),2)
 print(model.select)
+
+
+
 var.Indv.GP <- round(diag(Sigma_GPNL$SigmaI)/Sigma_GPNL$SigmaI[1,1],2)
 var.Indv.GP.rel <- round(diag(Sigma_GPNL$SigmaI)/diag(Sigma_GPNL$Sigma),2)
 var.Team.GP.rel <- round(diag(Sigma_GPNL$SigmaT)/diag(Sigma_GPNL$Sigma),2)

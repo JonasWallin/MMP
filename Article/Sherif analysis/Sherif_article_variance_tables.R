@@ -1,4 +1,3 @@
-e.g. summary.ce(CEM2)
 
 library(MMP)
 library(tidyverse)
@@ -28,6 +27,7 @@ var.Err <- round(diag(Covs$SigmaE),2)
 var.Indv <- round(diag(Covs$SigmaI),2)
 var.Team <- round(diag(Covs$SigmaT),2)
 var.Tot <- round(diag(Covs$Sigma),2)
+
 
 Var.abs <- cbind(var.Err,var.Indv,var.Team,var.Tot)
 
