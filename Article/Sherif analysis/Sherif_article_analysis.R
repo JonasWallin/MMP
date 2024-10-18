@@ -135,7 +135,7 @@ Table3 <- c(CEI2.h$betas,  #betas
             exp(2 * CEI2.h$covariances$team[[1]]), # sigma^2_tau0
             exp(2 * CEI2.h$covariances$team[[2]][2]), # sigma^2_tau1
             CEI2.h$covariances$team[[2]][1], #delta_tau
-            exp( CEI2.h$covariances$team[[2]][2]), #kappa_tau
+            exp( CEI2.h$covariances$team[[2]][3]), #kappa_tau
             exp(2 * CEI2.h$covariances$error[[1]]) #sigma2_eps
             )  
 Table3 <- round(Table3,3)
