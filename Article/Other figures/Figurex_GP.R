@@ -1,13 +1,11 @@
 ##
-# simulate n individual GP then fit 
-# then same processes with conses modeling
+# Generating Figure 1.
 # 
 ##
 graphics.off()
 library(ggplot2)
 library(MMP)
 set.seed(8)
-save.fig = F
 n.indv <- 4
 T_     <- 4
 delta = -0.2
@@ -87,9 +85,7 @@ pl1 <- pl1 + facet_wrap(~I, ncol = 1) + theme_bw()+
         axis.text.x = element_text(size = 11),
         axis.text.y = element_text(size = 11))
 
-if(save.fig) {
-  ggsave('Figure_GP_obs.pdf', pl1)
-}
+
 
 print(pl1)
 con.data <- rbind(Latent.data,Latent.data.con)
