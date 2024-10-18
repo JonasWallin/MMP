@@ -15,6 +15,7 @@ library(readxl)
 library(dplyr)
 library(MASS)
 library(misty)
+library(ggpubr)
 
 data.folder <- "../../Dropbox/articles/buisness/Projekt 2 Team Emergence YB JW FD/Johnson et al 2014 JOM/data/Data/Formatted/"
 dat <- read.csv(paste(data.folder,"pce_data_wide.dat",sep=""),sep=",",header=F)
@@ -82,9 +83,9 @@ results_coh <- process_data(data.coh, "tru")
 
 
 
-###
+#######
 # Figure 5
-###
+######
 group.id <- unique(results_coh$data$group)
 data.vis <- results_coh$data[results_coh$data$group%in%group.id[21:30],]
 
@@ -216,35 +217,88 @@ nul.NL <- ce(y ~ 1+time,
 Sigma_NUL_NL <- get.Cov(nul.NL$covariances, nul.NL$object)
 
 
-#table Loglik AIC 
 
-model.select.lin <- data.frame(name=c("NULL","HEM","HOM","GP"),
-                               loglik = c(null.model$loglik,CEM.hem$loglik, CEM.hom$loglik,GP$loglik),
-                               AIC    = c(null.model$AIC,CEM.hem$AIC, CEM.hom$AIC,GP$AIC),
-                               group=c("multi","multi","multi","multi"))
-model.select.non <- data.frame(name=c("HEM","HOM","slope","GP"),
-                           loglik = c(nul.NL$loglik, CEM.hom.NL$loglik,Randomslope.NL$loglik, GPNL$loglik),
-                           AIC    = c(nul.NL$AIC, CEM.hom.NL$AIC,Randomslope.NL$AIC, GPNL$AIC),
-                           group  = c("GP non stationary","GP non stationary", "GP non stationary","GP non stationary") )
-model.select <- rbind(model.select.lin,model.select.non)
-model.select$wLik= round(exp(model.select$loglik)/sum(exp(model.select$loglik)),2)
-print(model.select)
+###
+# TABLE 2
+##
+names <- c("L:null","L:HetCEM","L:HomCEM","L:GP","GP:HetCEM","GP:HomCEM","GP:GP")
+models <- list(null.model,CEM.hem,CEM.hom,GP,CEM.hem.NL,CEM.hom.NL,GPNL)
+Table <- akaike.weight(models, 
+                       names)
+Table <- data.frame(Model = Table$names,
+                    AIC =  sapply(models, function(i) i$AIC),
+                    loglik = sapply(models, function(i) i$loglik),
+                    "Akaike weight" =  Table$weight)
+Table$Akaike.weight <- round(Table$Akaike.weight,2)
+print(xtable::xtable(Table))
 
 
+###
+# TABLE 4
+##
 
-var.Indv.GP <- round(diag(Sigma_GPNL$SigmaI)/Sigma_GPNL$SigmaI[1,1],2)
-var.Indv.GP.rel <- round(diag(Sigma_GPNL$SigmaI)/diag(Sigma_GPNL$Sigma),2)
-var.Team.GP.rel <- round(diag(Sigma_GPNL$SigmaT)/diag(Sigma_GPNL$Sigma),2)
-cat('GP:  V[I_t]/V[I_0] = ',var.Indv.GP,'\n')
-cat('GP:  V[I_t]/V[Y_t] = ',var.Indv.GP.rel,'\n')
-cat('GP:  V[G_t]/V[Y_t] = ',var.Team.GP.rel,'\n')
+Table4 <- c(GPNL$betas,  #betas
+            exp(2 * GPNL$covariances$indv[[1]]), #sigma^2_v0
+            exp(2 * GPNL$covariances$indv[[2]][2]), #sigma^2_v1
+            GPNL$covariances$indv[[2]][1], #delta_v
+            exp( GPNL$covariances$indv[[2]][2]), #kappa_v
+            exp(2 * GPNL$covariances$team[[1]]), # sigma^2_tau0
+            exp(2 * GPNL$covariances$team[[2]][2]), # sigma^2_tau1
+            GPNL$covariances$team[[2]][1], #delta_tau
+            exp( GPNL$covariances$team[[2]][2]), #kappa_tau
+            exp(2 * GPNL$covariances$error[[1]]) #sigma2_eps
+)  
+Table4 <- round(Table4,3)
+cat('Table4:\n')
+print(Table4)
 
-var.Indv.HEM <- round(diag(Sigma_hom_NL$SigmaI)/Sigma_hom_NL$SigmaI[1,1],2)
-var.Indv.HEM.rel <- round(diag(Sigma_hom_NL$SigmaI)/diag(Sigma_hom_NL$Sigma),2)
-var.Team.HEM.rel <- round(diag(Sigma_hom_NL$SigmaT)/diag(Sigma_hom_NL$Sigma),2)
-var.Meas.HEM.rel <- round(diag(Sigma_hom_NL$SigmaE)/diag(Sigma_hom_NL$Sigma),2)
-cat('HOM: V[I_t]/V[I_0] = ',var.Indv.HEM,'\n')
-cat('HOM: V[I_t]/V[Y_t] = ',var.Indv.HEM.rel,'\n')
-cat('HOM: V[E_t]/V[Y_t] = ',var.Meas.HEM.rel,'\n')
-cat('HOM:  V[G_t]/V[Y_t] = ',var.Team.HEM.rel,'\n')
+###
+# Figure 6
+###
+t <- 0:3
+dat.fig <- data.frame(t = 0:3, 
+                  VeY = diag(Sigma_GPNL$SigmaE),
+                  VP = diag(Sigma_GPNL$SigmaI),
+                  VG = diag(Sigma_GPNL$SigmaT))
+dat.fig$tot <- rowSums(dat[,2:4])
+dat.fig$PVeY <- dat.fig$VeY/dat$tot
+dat.fig$PVP <- dat.fig$VP/dat$tot
+dat.fig$PVG <- dat.fig$VG/dat$tot
+dat.fig$PVY <- dat.fig$tot/dat$tot
+dat.fig$VY <- dat.fig$tot
+
+
+pvar <- dat.fig %>% 
+  pivot_longer(c(VeY,VP,VG,VY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Variance") +
+  xlab("Time") +
+  #  scale_color_discrete(name="",labels = c("VeY" = TeX('$\\V[e^Y_{tij}]$'),"VG" = TeX('$\\V[G_{tij}]$'),"VP" = TeX('$\\V[P_{tij}]$'),"VY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  scale_linetype_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  theme(legend.position = "none")
+pvar
+
+pperc <- dat.fig %>% 
+  pivot_longer(c(PVeY,PVP,PVG,PVY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Proportion") +
+  xlab("Time") +
+  # scale_color_discrete(name="",labels = c("PVeY" = TeX('$\\V[e^Y_{tij}]$'),"PVG" = TeX('$\\V[G_{tij}]$'),"PVP" = TeX('$\\V[P_{tij}]$'),"PVY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  scale_linetype_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  theme(legend.position = "right")
+pperc
+
+varplot2 <- ggpubr::ggarrange(pvar, pperc, 
+                      #labels = c("A", "B"),
+                      ncol = 2, nrow = 1,
+                      common.legend = T,
+                      legend="bottom")
 
