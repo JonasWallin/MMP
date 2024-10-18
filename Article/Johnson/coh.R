@@ -176,19 +176,6 @@ CEM.hem.NL <- ce(y ~ 1+time,
                param = par.CEM.NL)
 Sigma_CEM_NL <- get.Cov(CEM.hem.NL$covariances, CEM.hem.NL$object)
 
-par.Random.NL <- c(-4.280932121, -2.582142403, -3.232578980 , 0.002251664 ,-5.924047557,
-                   -2.147554920, -0.110134175 ,-0.477223419,2.843943268)
-Randomslope.NL <- ce(y ~ 1+time, 
-                 ~ 1 + time  | person, 
-                 ~ 1 | group, 
-                 emergence = ~ 1, 
-                 method.team = "OU.homeostasis",
-                 method = "CEM2", 
-                 time = "time",
-                 data = results_coh$data,
-                 param = par.Random.NL)
-Sigma_RandomSlope_NL <- get.Cov(Randomslope.NL$covariances, Randomslope.NL$object)
-
 
 par_CEM.hom.NL <- c(-4.01322217, -3.88106536, 0.25777991, -2.83494409,
                     -4.41923045 , 0.07912546, -2.29050619, -1.19022169)
@@ -203,18 +190,7 @@ CEM.hom.NL <- ce(y ~ 1+time,
                  param = par_CEM.hom.NL)
 Sigma_hom_NL <- get.Cov(CEM.hom.NL$covariances, CEM.hom.NL$object)
 
-par.nul.NL <-c(-4.06906401, -2.40471177, -6.28582685,
-               -6.69748389,  0.09287034, -2.31271413, -1.21208195)
-nul.NL <- ce(y ~ 1+time, 
-                 ~ 1  | person, 
-                 ~ 1 | group, 
-                 emergence = ~ 1, 
-                 method.team = "OU.homeostasis",
-                 method = "CEM2", 
-                 time = "time",
-                 data = results_coh$data,
-             param = par.nul.NL)
-Sigma_NUL_NL <- get.Cov(nul.NL$covariances, nul.NL$object)
+
 
 
 
@@ -260,11 +236,11 @@ dat.fig <- data.frame(t = 0:3,
                   VeY = diag(Sigma_GPNL$SigmaE),
                   VP = diag(Sigma_GPNL$SigmaI),
                   VG = diag(Sigma_GPNL$SigmaT))
-dat.fig$tot <- rowSums(dat[,2:4])
-dat.fig$PVeY <- dat.fig$VeY/dat$tot
-dat.fig$PVP <- dat.fig$VP/dat$tot
-dat.fig$PVG <- dat.fig$VG/dat$tot
-dat.fig$PVY <- dat.fig$tot/dat$tot
+dat.fig$tot <- rowSums(dat.fig[,2:4])
+dat.fig$PVeY <- dat.fig$VeY/dat.fig$tot
+dat.fig$PVP <- dat.fig$VP/dat.fig$tot
+dat.fig$PVG <- dat.fig$VG/dat.fig$tot
+dat.fig$PVY <- dat.fig$tot/dat.fig$tot
 dat.fig$VY <- dat.fig$tot
 
 
