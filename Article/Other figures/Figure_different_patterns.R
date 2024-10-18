@@ -5,6 +5,8 @@
 graphics.off()
 library(ggplot2)
 library(MMP)
+library(ggpubr)
+library(tidyr)
 set.seed(22)
 save.fig = F
 T_     <- 4
@@ -35,13 +37,18 @@ x2 <- L.con%*%Z2
 fig.data = data.frame(time = grid, lower.CI = -1.96*exp(delta*grid), upper.CI =1.96*exp(delta*grid),
                       x1 = x1, x2 = x2)
 fig.obs <- data.frame(time = grid[grid.obs], x1 = x1[grid.obs], x2 = x2[grid.obs])
+fig.obs <- gather(fig.obs, "individual", "obs", -time)
+
 pl1 <- ggplot(data=fig.data) + 
   geom_line(aes(x=time,y=x1 ),size=1,alpha=0.3,col='red')+ geom_line(aes(x=time,y=x2 ),size=1,alpha=0.3,col='red')  +
-  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
+#  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
+  geom_point(data=fig.obs,aes(x=time,y=obs, shape=individual ),size=2.5,col='red') +
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
   theme_bw()+
+  theme(legend.text=element_text(size=12))+
+  scale_shape_discrete(name="",labels = c("Individual 1", "Individual 2"))+
   ylab("")
 print(pl1)
 
@@ -51,12 +58,17 @@ x2.het <- exp(delta*grid)*Z2
 fig.data = data.frame(time = grid, lower.CI = -1.96*exp(delta*grid), upper.CI =1.96*exp(delta*grid),
                       x1 = x1.het, x2 = x2.het)
 fig.obs <- data.frame(time = grid[grid.obs], x1 = x1.het[grid.obs], x2 = x2.het[grid.obs])
+fig.obs <- gather(fig.obs, "individual", "obs", -time)
+
 pl2 <- ggplot(data=fig.data) + 
-  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
+  geom_point(data=fig.obs,aes(x=time,y=obs, shape=individual ),size=2.5,col='red') +
+#  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
   theme_bw()+
+  theme(legend.text=element_text(size=12))+
+  scale_shape_discrete(name="",labels = c("Individual 1", "Individual 2"))+
   ylab("")
 print(pl2)
 
@@ -66,13 +78,20 @@ x2.hom <- exp(delta*grid)*Z2[1]
 fig.data = data.frame(time = grid, lower.CI = -1.96*exp(delta*grid), upper.CI =1.96*exp(delta*grid),
                       x1 = x1.hom, x2 = x2.hom)
 fig.obs <- data.frame(time = grid[grid.obs], x1 = x1.hom[grid.obs], x2 = x2.hom[grid.obs])
+
+fig.obs <- gather(fig.obs, "individual", "obs", -time)
 pl3 <- ggplot(data=fig.data) + 
-  geom_line(aes(x=time,y=x1 ),size=1,alpha=0.3,col='red')+ geom_line(aes(x=time,y=x2 ),size=1,alpha=0.3,col='red')  +
-  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
+  geom_line(aes(x=time,y=x1 ),size=1,alpha=0.3,col='red')+ 
+  geom_line(aes(x=time,y=x2 ),size=1,alpha=0.3,col='red')  +
+  geom_point(data=fig.obs,aes(x=time,y=obs, shape=individual ),size=2.5,col='red') +
+#  geom_point(data=fig.obs,aes(x=time,y=x1 ),size=2.5,col='red',shape=15) +
+#  geom_point(data=fig.obs,aes(x=time,y=x2 ),size=2.5,col='red')+
   geom_line(aes(x = time,  y = lower.CI),color='blue',size=1.5,linetype = "dashed")+
   geom_line(aes(x = time, y = upper.CI),color='blue',size=1.5,linetype = "dashed")+
   xlab("Time") + 
   theme_bw()+
+  theme(legend.text=element_text(size=12))+
+  scale_shape_discrete(name="",labels = c("Individual 1", "Individual 2"))+
   ylab("")
 print(pl3)
 
@@ -80,7 +99,10 @@ plot_all <- ggarrange(pl3,pl1,pl2,
                       labels = c("Homogeneous", "Gaussian Process", "Heterogeneous"),
                       ncol = 3, nrow = 1,
                       common.legend = T,
+                      vjust = 2,
+                      hjust = c(-0.7,-0.6,-0.7),
+                      font.label = list(size = 14, color = "black", face = "bold", family = NULL),
                       legend="bottom")
 plot_all
-ggsave("pattern_plot_with_GP.pdf",plot_all)  
+#ggsave("pattern_plot_with_GP.pdf",plot_all)  
 
