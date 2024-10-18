@@ -215,15 +215,15 @@ print(xtable::xtable(Table))
 
 Table4 <- c(GPNL$betas,  #betas
             exp(2 * GPNL$covariances$indv[[1]]), #sigma^2_v0
-            exp(2 * GPNL$covariances$indv[[2]][2]), #sigma^2_v1
+            exp(2 * GPNL$covariances$indv[[2]][2] - GPNL$covariances$indv[[2]][3])/2, #sigma^2_v1
             GPNL$covariances$indv[[2]][1], #delta_v
-            exp( GPNL$covariances$indv[[2]][3]), #kappa_v
+            exp( -GPNL$covariances$indv[[2]][3]), #kappa_v
             exp(2 * GPNL$covariances$team[[1]]), # sigma^2_tau0
-            exp(2 * GPNL$covariances$team[[2]][2]), # sigma^2_tau1
+            exp(2 * GPNL$covariances$team[[2]][2]- GPNL$covariances$team[[2]][3])/2, # sigma^2_tau1
             GPNL$covariances$team[[2]][1], #delta_tau
-            exp( GPNL$covariances$team[[2]][3]), #kappa_tau
+            exp( -GPNL$covariances$team[[2]][3]), #kappa_tau
             exp(2 * GPNL$covariances$error[[1]]) #sigma2_eps
-)  
+) 
 Table4 <- round(Table4,3)
 cat('Table4:\n')
 print(Table4)
