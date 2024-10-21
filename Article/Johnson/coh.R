@@ -72,22 +72,47 @@ vars <- variable.names(PCEsub[,c(9:12,50:53,81:86)])
 
 data.coh <- PCEsub[,vars[12:14]]
 
+
+
 #compute the eigenvalues and eigenvectors of the correlation matrix
 SigmaE <- eigen(cov2cor(cov(data.coh,use="complete")))
 cat('largest eigenvalue explains =',100*round(SigmaE$values[1]/sum(SigmaE$values),2),'% of the variability\n')
 cat('the corresponding eigenvector is:', round(SigmaE$vectors[,1],2),'\n')
 results_coh <- process_data(data.coh, "tru")
 
+
+## Save data to package
+## sortera bort missing data, spara och kör om/uppdatera analys
+cohesiondat <- cbind(PCEsub[, c("person", "group", "time")], data.coh, rowMeans(scale(data.coh, center = FALSE)))
+# Rename the last column to "y"
+names(cohesiondat)[7] <- "y"
+
+# Remove rows where "y" is NA
+cohesiondat <- subset(cohesiondat, !is.na(y))
+
+
+cohesiondat <- cohesiondat[,-7]
+#usethis::use_data(cohesiondat,overwrite = TRUE)
+
+
+
 ###########################
 #File starts
+data("cohesiondat")
 
+#compute the eigenvalues and eigenvectors of the correlation matrix
+SigmaE <- eigen(cov2cor(cov(cohesiondat[,4:6],use="complete")))
+cat('largest eigenvalue explains =',100*round(SigmaE$values[1]/sum(SigmaE$values),2),'% of the variability\n')
+cat('the corresponding eigenvector is:', round(SigmaE$vectors[,1],2),'\n')
+
+cohesiondat$y <- rowMeans(scale(cohesiondat[,4:6], center = FALSE))
 
 
 #######
 # Figure 5
 ######
-group.id <- unique(results_coh$data$group)
-data.vis <- results_coh$data[results_coh$data$group%in%group.id[21:30],]
+group.id <- unique(cohesiondat$group)
+data.vis <- cohesiondat[cohesiondat$group%in%group.id[21:30],]
 
 pl1 <- ggplot(data=data.vis, 
               aes(x=time,y=y, linetype = factor(person))) + 
@@ -104,10 +129,11 @@ pl1 <- pl1 +  facet_wrap(~group, ncol = 5) +
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12))
 print(pl1)
+#ggsave("cohesion_data.pdf", pl1)
 
 ####
 # Fitting all the models parameters 
-# (using known starting point to imporve speed of convergence)
+# (using known starting point to improve speed of convergence)
 ###
 par.null  <- c(-4.2122558, -2.4602522, -4.8964796, -2.0860085, -2.9267910, -0.0183323)
 null.model <- ce(y ~ 1+time, 
@@ -115,7 +141,7 @@ null.model <- ce(y ~ 1+time,
               ~ 1 + time | group, 
               emergence = ~ 1, 
               method = "CEM2", 
-              data = results_coh$data,
+              data = cohesiondat,
               param = par.null)
 Sigma.null <- get.Cov(null.model$covariances, null.model$object)
 par.CEM  <- c(-3.81459831, -2.46355658, -27.31109528,   6.81364972,
@@ -125,7 +151,7 @@ CEM.hem <- ce(y ~ 1+time,
            ~ 1 + time | group, 
            emergence = ~ 1+time, 
            method = "CEM2", 
-           data = results_coh$data,
+           data = cohesiondat,
            param = par.CEM)
 Sigma_CEM.hem <- get.Cov(CEM.hem$covariances, CEM.hem$object)
 par_CEM.hom <- c(-3.84398510, -4.67598509 , 0.24852295,
@@ -136,7 +162,7 @@ CEM.hom <- ce(y ~ 1+time,
             emergence = ~ -1+time, 
             method = "CEI2", 
             time = "time",
-            data = results_coh$data,
+            data = cohesiondat,
             par= par_CEM.hom)
 Sigma_CEM.hom <- get.Cov(CEM.hom$covariances, CEM.hom$object)
 par.GP <- c(-3.90021116, -4.34476048,  0.21589538,
@@ -148,7 +174,7 @@ GP <- ce(y ~ 1+time,
            emergence = ~ 1 , 
            method = "GP",
            time = "time",
-           data =results_coh$data,
+           data =cohesiondat,
            param=par.GP)
 Sigma_GP <- get.Cov(GP$covariances, GP$object)
 par.GP <- c(-4.2035533, -5.2085661 , 0.1726854 ,-2.9251160,
@@ -160,7 +186,7 @@ GPNL <- ce(y ~ 1+time,
            method = "GP",
            method.team = "OU.homeostasis",
            time = "time",
-           data =results_coh$data,
+           data =cohesiondat,
            param=par.GP)
 Sigma_GPNL <- get.Cov(GPNL$covariances, GPNL$object)
 par.CEM.NL <- c(-4.44916866, -2.42968033, -5.27093651,  0.22947725,
@@ -172,7 +198,7 @@ CEM.hem.NL <- ce(y ~ 1+time,
                method.team = "OU.homeostasis",
                method = "CEM2", 
                time = "time",
-               data = results_coh$data,
+               data = cohesiondat,
                param = par.CEM.NL)
 Sigma_CEM_NL <- get.Cov(CEM.hem.NL$covariances, CEM.hem.NL$object)
 
@@ -186,7 +212,7 @@ CEM.hom.NL <- ce(y ~ 1+time,
                  method.team = "OU.homeostasis",
                  method = "CEI2", 
                  time = "time",
-                 data = results_coh$data,
+                 data = cohesiondat,
                  param = par_CEM.hom.NL)
 Sigma_hom_NL <- get.Cov(CEM.hom.NL$covariances, CEM.hom.NL$object)
 
@@ -277,4 +303,4 @@ varplot2 <- ggpubr::ggarrange(pvar, pperc,
                       ncol = 2, nrow = 1,
                       common.legend = T,
                       legend="bottom")
-
+ggsave("cohesion_varianceplot3.pdf",varplot2)
