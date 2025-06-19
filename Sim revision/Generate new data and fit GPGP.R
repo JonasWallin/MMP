@@ -48,7 +48,7 @@ param_names <- c("beta0", "beta1",
                  "sigma^2_tau0", "sigma^2_tau1",  "delta_tau", "kappa_tau","corr_tau",
                  "sigma2_eps")
 names(Table.coh) <- param_names
-print(round(Table.coh,3)) 
+#print(round(Table.coh,3)) 
 
 
 
@@ -216,7 +216,7 @@ param_names <- c("beta0", "beta1",
                  "sigma^2_tau0", "sigma^2_tau1",  "delta_tau", "kappa_tau","corr_tau",
                  "sigma2_eps")
 names(Table.sherif) <- param_names
-print(Table.sherif) 
+#print(Table.sherif) 
 
 set.seed(2025)
 
@@ -340,4 +340,4 @@ param_names <- c("beta0", "beta1",
                  "sigma^2_tau0", "sigma^2_tau1",  "delta_tau", "kappa_tau","corr_tau",
                  "sigma2_eps")
 names(Table.sim) <- param_names
-print(round(cbind(Table,Table.sim),3)) 
+print(round(cbind(Table.sherif,Table.sim),3)) 
