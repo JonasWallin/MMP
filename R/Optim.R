@@ -213,3 +213,185 @@ smoothIndivual <- function(param, Obj){
  return(smoothRes)
 }
 
+#' Estimate group effects via maximum likelihood
+#'
+#' This function wraps `likelihood.groupavg` and performs optimization
+#' of group-level parameters given a model object.
+#'
+#' @param Obj A model object with fields `teamCovs`, `teams`, and
+#'   methods to update parameters.
+#' @param init_param Numeric vector of initial parameter guesses
+#'   (first element is global mean mu, remainder are covariance params).
+#' @param control Optional list of control parameters passed to `optim`.
+#' @return A list with elements:
+#'   * `fit`: the final `optim` result,
+#'   * `param_list`: a list of updated team parameters,
+#'   * `param_vector`: the concatenated parameter vector returned by `listToParam`.
+estimate_group_effects <- function(param_list, Obj, init_param, control = list(maxit = 1000, trace = FALSE)) {
+  # Negative log-likelihood wrapper
+  nll <- function(p) -likelihood.groupavg(p, Obj$object)
+  
+  # First optimization
+  fit1 <- optim(par     = init_param,
+                fn      = nll,
+                method  = "BFGS",
+                control = control)
+  
+  # Refine around the solution
+  fit2 <- optim(par     = fit1$par,
+                fn      = nll,
+                method  = "BFGS",
+                control = control)
+  
+  # Update covariance parameter list from the fitted pars (excluding mu)
+  raw_cov_pars <- fit2$par[-1]
+  param_list   <- updateTeamParamList(param_list, Obj$object, raw_cov_pars)
+  
+  
+  return(param_list)
+}
+
+#' Estimate error and individual-level effects via maximum likelihood
+#'
+#' This function wraps `likelihood.degroup` and performs optimization
+#' of error and individual-level parameters given a model object.
+#'
+#' @param Obj A model object with fields `errorCovs`, `indvCovs`, `teams`.
+#' @param init_param Numeric vector of initial parameter guesses.
+#' @param control Optional list of control parameters passed to `optim`.
+#' @return A list with elements:
+#'   * `fit`: the final `optim` result,
+#'   * `param_list`: a list of updated error and individual parameters.
+estimate_error_indv_effects <- function(param_list, Obj, init_param, control = list(maxit = 1000, trace = FALSE)) {
+  # Negative log-likelihood wrapper
+  nll <- function(p) -likelihood.degroup(p, Obj$object)
+  
+  # First optimization
+  fit1 <- optim(par     = init_param,
+                fn      = nll,
+                method  = "BFGS",
+                control = control)
+  
+  # Refine around the solution
+  fit2 <- optim(par     = fit1$par,
+                fn      = nll,
+                method  = "BFGS",
+                control = control)
+  
+  # Update model covariances with the fitted parameters
+  param_list <-  updateErrorIndvParamList(param_list, Obj$object, fit2$par)
+  return(param_list)
+}
+
+
+likelihood.groupavg <- function(param, Obj){
+  loglik <- 0
+  paramList <- list()
+  paramList$team <- list()
+  mu <- param[1]
+  param <- param[-1]
+  for (i in 1:length(Obj$teamCovs)) {
+    covObj <- Obj$teamCovs[[i]]
+    nParObj <- covObj$get_param_length()
+    paramList$team[[i]] <- param[1:nParObj]
+    param <- param[-(1:nParObj)]
+  }
+  for(i in 1:length(Obj$teams)){
+    y.avg.pos <- tibble(
+      time = Obj$teams[[i]]$time,
+      y_i  = Obj$teams[[i]]$data$Y,
+      idx  = seq_along(time)        # original position
+    ) %>%
+      group_by(time) %>%
+      summarise(
+        first_idx = first(idx),     # grabs the smallest original index
+        y_avg     = mean(y_i),      # group mean
+        .groups   = "drop"
+      )
+    Sigma_X    <- matrix(0, nrow = Obj$teams[[i]]$n_obs,
+                         ncol = Obj$teams[[i]]$n_obs)
+    for(ii in 1:length(Obj$teamCovs)){
+      Sigma_X <- Sigma_X + as.matrix(Obj$teamCovs[[ii]]$get_AtCA(paramList$team[[ii]], Obj$teams[[i]]))
+    }
+    Sigma_X <- Sigma_X[y.avg.pos$first_idx,y.avg.pos$first_idx]
+    y_i <- y.avg.pos$y_avg
+    # calculate the likelihood of y_i which is zero mean and covariance Sigma_X
+    # check if Sigma_X si positive definite
+    if (any(eigen(Sigma_X)$values <= 0)) {
+      return(Inf)
+    }
+    loglik <- loglik -0.5 * (t(y_i-mu) %*% solve(Sigma_X, y_i-mu)) -0.5* log(det(Sigma_X)) 
+  }
+  
+  return(loglik)
+}
+
+
+likelihood.degroup <- function(param, Obj){
+  loglik <- 0
+  paramList <- list()
+  paramList$error <- list()
+  for(i in 1:length(Obj$errorCovs)){
+    covObj <- Obj$errorCovs[[i]]
+    nParObj <- covObj$get_param_length()
+    paramList$error[[i]] <- param[1:nParObj]
+    param <- param[-(1:nParObj)]
+  }
+  
+  if(length(Obj$indvCovs)>0){
+    paramList$indv <- list()
+    for(i in 1:length(Obj$indvCovs)){
+      covObj <- Obj$indvCovs[[i]]
+      nParObj <- covObj$get_param_length()
+      paramList$indv[[i]] <- param[1:nParObj]
+      param <- param[-(1:nParObj)]
+    }
+  }
+  
+  for(i in 1:length(Obj$teams)){
+    Team_i <- Obj$teams[[i]]
+    y.residuals <- tibble(
+      time = Team_i$time,
+      y_i  = Team_i$data$Y,
+      idx  = seq_along(time)
+    ) %>%
+      group_by(time) %>%
+      mutate(
+        # subtract the group mean from each observation
+        y_centered = y_i - mean(y_i)
+      ) %>%
+      ungroup() %>%
+      arrange(idx) 
+    Sigma_X    <- matrix(0, nrow = Team_i$n_obs,
+                         ncol = Team_i$n_obs)
+    y_i <- y.residuals$y_centered
+    for(ii in 1:Team_i$nindv){
+      #meauserment error setup
+      sigmaI  <- matrix(0,
+                        nrow = Team_i$indv[[ii]]$n,
+                        ncol = Team_i$indv[[ii]]$n)
+      meanI   <- rep(0,  Team_i$indv[[ii]]$n)
+      for(iii in 1:length(Obj$indvCovs)){
+        sigmaI <- sigmaI + Obj$indvCovs[[iii]]$get_AtCA(paramList$indv[[iii]], Team_i$indv[[ii]])
+        meanI  <- meanI  + Obj$indvCovs[[iii]]$get_Amean(paramList$indv[[iii]], Team_i$indv[[ii]])
+      }
+      index_ <- Team_i$indv[[ii]]$A_list
+      #Sigma_X    <- Sigma_X + Team_i$indv[[ii]]$A%*%sigmaI%*%SparseM::t(Team_i$indv[[ii]]$A)
+      Sigma_X[index_,index_]    <- Sigma_X[index_,index_] + sigmaI
+      y_i[index_]        <- y_i[index_] - as.vector(meanI)
+    }
+    Sigma_X_d <- rep(0, dim(Sigma_X)[1])
+    for(iii in 1:length(Obj$errorCovs))
+      Sigma_X_d <- Sigma_X_d + Obj$errorCovs[[iii]]$add_diagonal(paramList$error[[iii]], Team_i)
+    diag(Sigma_X) <- diag(Sigma_X) + Sigma_X_d
+    
+    # calculate the likelihood of y_i which is zero mean and covariance Sigma_X
+    # check if Sigma_X si positive definite
+    if (any(eigen(Sigma_X)$values <= 0)) {
+      return(Inf)
+    }
+    loglik <- loglik -0.5 * (t(y_i) %*% solve(Sigma_X, y_i)) -0.5* log(det(Sigma_X)) 
+  }
+  
+  return(loglik)
+}

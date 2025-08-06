@@ -5,6 +5,7 @@
 graphics.off()
 library(ggplot2)
 library(MMP)
+save.fig=F
 set.seed(8)
 n.indv <- 4
 T_     <- 4

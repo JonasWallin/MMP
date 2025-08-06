@@ -1,6 +1,5 @@
 ##
-# Creating figure for the two limiting CE patterns and a Gaussian processes
-#
+# Reproducing Figure 1
 ##
 graphics.off()
 library(ggplot2)
@@ -93,7 +92,7 @@ pl3 <- ggplot(data=fig.data) +
   theme(legend.text=element_text(size=12))+
   scale_shape_discrete(name="",labels = c("Individual 1", "Individual 2"))+
   ylab("")
-print(pl3)
+
 
 plot_all <- ggarrange(pl3,pl1,pl2, 
                       labels = c("Homogeneous", "Gaussian Process", "Heterogeneous"),
@@ -103,6 +102,5 @@ plot_all <- ggarrange(pl3,pl1,pl2,
                       hjust = c(-0.7,-0.6,-0.7),
                       font.label = list(size = 14, color = "black", face = "bold", family = NULL),
                       legend="bottom")
-plot_all
-#ggsave("pattern_plot_with_GP.pdf",plot_all)  
+print(plot_all)
 

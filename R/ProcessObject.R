@@ -191,10 +191,10 @@ dataToObject <- function(data_list, Teams = NULL){
     if(is.null(WET)==F)
       TeamObj$teams[[i]]$W = as.matrix(WET)[Teams == uTeams[i],, drop = FALSE]
 
+    timeTeam                <- time[Teams == uTeams[i]]
+    TeamObj$teams[[i]]$time  <- timeTeam
     if(is.null(data[["method.team"]])==F){
       if(method.team == "OU" || method.team == "OU.homeostasis"){
-        timeTeam                <- time[Teams == uTeams[i]]
-        TeamObj$teams[[i]]$time  <- timeTeam
         TeamObj$teams[[i]]$D    <- as.matrix(timeTeam)
         
       }

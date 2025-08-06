@@ -1,0 +1,267 @@
+---
+title: "Sherif_analysis"
+author: "Yvette Baurne, Frederic Delmar, and Jonas Wallin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MMP)
+library(dplyr)
+library(ggplot2)
+```
+
+## Visualsing the data
+
+We begin by loading the Sherif dataset and plotting the raw measurements. At the first time point, each subject makes an individual estimate of the autokinetic effect. At the next two time points, they report in groups, and at the final time point they return to individual estimates. For this analysis, we drop that last individual measurement to focus on the group dynamics.
+
+```{r data}
+data("sherifdat")
+sherifdat$time <- sherifdat$time + 1
+sherifdat <- subset(sherifdat, time <= 3)
+```
+
+
+```{r figure, echo=FALSE}
+fig1 <- ggplot(data=sherifdat, 
+               aes(x=time,y=y, linetype = factor(person, labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
+  geom_line(linewidth=0.5) + xlab("Time") + ylab("Inches") +
+  guides(linetype=guide_legend(title="Subjects within each group")) +
+  scale_x_continuous(sec.axis = sec_axis(~.*1,labels = c("indv", "group", "group", "group")))
+
+fig1 <- fig1 +  facet_wrap(~group, ncol = 4) + 
+  # labs(title = "Sherif (1935) autokinetic data") + 
+  theme_bw() +
+  theme(legend.position="bottom") +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        #axis.text.x = element_text(size = 11),
+        #axis.text.y = element_text(size = 11),  
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
+print(fig1)
+```
+We next examine group‐level dynamics by averaging each group’s responses over time and plotting these means together. The trajectories hint at some autoregressive pattern. We also observe that between‐group variability appears to grow over the measurement occasions, but with only eight groups this trend should be interpreted cautiously.
+```{r grouped depence, echo=FALSE}
+group_time_summary <- sherifdat %>%
+  group_by(group, time) %>%
+  summarise(
+    y_mean       = mean(y),
+    .groups = "drop"
+  )
+
+fig <- ggplot(group_time_summary, aes(x = time, y = y_mean, 
+                               group = factor(group), 
+                               color = factor(group))) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Mean Response Over Time by Group",
+    x     = "Time",
+    y     = "Mean of y",
+    color = "Group"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    panel.grid.minor = element_blank()
+  )
+var_df <- group_time_summary %>%
+  group_by(time) %>%
+  summarise(var_y_mean = var(y_mean), .groups = "drop")
+print(fig)
+print(var_df)
+```
+
+We also examine individual deviations after subtracting each group’s mean. The resulting plots reveal a strong, non‐stationary “consensus emergence,” where subjects converge toward the group average over time. There is some suggestion of autoregressive dynamics in these deviations, but the dominant convergence effect makes it difficult to distinguish clearly.
+```{r degrouped depence, echo=FALSE}
+sherifdat_cell_demeaned <- sherifdat %>%
+  group_by(group, time) %>%
+  mutate(
+    
+    y_ct_mean   = mean(y),               # cell mean
+    y_demeaned  = y - y_ct_mean          # subtract it
+  ) %>%
+  ungroup()
+
+fig1 <- ggplot(data=sherifdat_cell_demeaned, 
+               aes(x=time,y=y_demeaned, linetype = factor(person, labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
+  geom_line(linewidth=0.5) + xlab("Time") + ylab("Inches") +
+  guides(linetype=guide_legend(title="Subjects within each group")) +
+  scale_x_continuous(sec.axis = sec_axis(~.*1,labels = c("indv", "group", "group", "group" )))
+
+fig1 <- fig1 +  facet_wrap(~group, ncol = 4) + 
+  # labs(title = "Sherif (1935) autokinetic data") + 
+  theme_bw() +
+  theme(legend.position="bottom") +
+  theme(legend.text=element_text(size=12),
+        legend.title=element_text(size=12),
+        #axis.text.x = element_text(size = 11),
+        #axis.text.y = element_text(size = 11),  
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
+print(fig1)
+var_time_df <- sherifdat_cell_demeaned %>%
+  group_by(time) %>%
+  summarise(
+    var_y = var(y_demeaned),
+    .groups = "drop"
+  )
+print(var_time_df)
+
+```
+We then fit a baseline model to these data. Given the model’s complexity, convergence to a global optimum isn’t guaranteed, and in fact the initial fit suggests a pattern that contradicts our expectations: the estimated group‐level variance actually decreases rather than increases over time.
+```{r fit model, echo=FALSE}
+GP.h <- ce(y ~ 1, 
+           ~ 1 | person, 
+           ~ 1 | group, 
+           emergence = ~ 1, 
+           method = "GP",
+           method.team = "OU.homeostasis",
+           time = "time",
+           data = sherifdat)
+```
+
+```{r fit model, echo=FALSE}
+Covs_inital.fit <- get.Cov(GP.h$covariances,GP.h$object)
+print('Variance for team effect over time')
+print(diag(Covs_inital.fit$SigmaT))
+```
+
+Next, we estimate the group‐level and individual‐level parameters separately—using each set of estimates as starting values for the full model refit. After refitting, the group‐level variance now follows the upward trajectory over time seen in the data.
+```{r refit, echo=FALSE}
+param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
+param_list <- estimate_group_effects(GP.h$covariances, GP.h, param.group)
+param <- c(0,0,0,0,0) #meauserment error
+param_list <- estimate_error_indv_effects(param_list, GP.h, param)
+par <- listToParam(param_list,GP.h$object)
+GP.h2 <- ce(y ~ 1, 
+           ~ 1 | person, 
+           ~ 1 | group, 
+           emergence = ~ 1, 
+           method = "GP",
+           method.team = "OU.homeostasis",
+           time = "time",
+           data = sherifdat,
+           param = par)
+Covs.fit <- get.Cov(GP.h2$covariances,GP.h2$object)
+print('Variance for team effect over time')
+print(diag(Covs.fit$SigmaT))
+```
+We now also explore if a linear random effect model for individuals could be better.
+```{r linear random effect model, echo=FALSE}
+#random effects for indivuals
+CEI2.h <- ce(y ~ 1+time, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ -1 + time, 
+             time = "time",
+             method = "CEI2", 
+             method.team = "OU.homeostasis",
+             data = sherifdat)
+param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
+param_list <- estimate_group_effects(CEI2.h$covariances, CEI2.h, param.group)
+param <- c(0,0,0,0) #meauserment error
+param_list <- estimate_error_indv_effects(param_list, CEI2.h, param)
+par <- listToParam(param_list,CEI2.h$object)
+CEI2.h2 <- ce(y ~ 1+time, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ -1 + time, 
+             time = "time",
+             method = "CEI2", 
+             method.team = "OU.homeostasis",
+             data = sherifdat,
+             param = par)
+
+CEI2.h <- ce(y ~ 1+time, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ -1 + time, 
+             time = "time",
+             method = "CEI2", 
+             method.team = "OU.homeostasis",
+             data = sherifdat)
+param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
+param_list <- estimate_group_effects(CEI2.h$covariances, CEI2.h, param.group)
+param <- c(0,0,0,0) #meauserment error
+param_list <- estimate_error_indv_effects(param_list, CEI2.h, param)
+par <- listToParam(param_list,CEI2.h$object)
+
+# random effect for groups not as complicate
+GP <- ce(y ~ 1+time, 
+         ~ 1 | person, 
+         ~ 1 + time | group, 
+         emergence = ~ 1, 
+         method = "GP",
+         time = "time",
+         data = sherifdat)
+param <- c(0,0,0,0,0) #meauserment error
+param_list <- estimate_error_indv_effects(GP$covariances, GP, param)
+par <- listToParam(param_list,GP$object)
+GP <- ce(y ~ 1+time, 
+         ~ 1 | person, 
+         ~ 1 + time | group, 
+         emergence = ~ 1, 
+         method = "GP",
+         time = "time",
+         data = sherifdat,
+         param = par)
+
+```
+The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on indivual level is basically equivalent to the Gaussian process.
+```{r AIC, echo=FALSE}
+cat('AIC_GP_GP = ', GP.h2$AIC,'\n')
+cat('AIC_CEI_GP = ', CEI2.h2$AIC,'\n')
+cat('AIC_GP_L = ', GP$AIC,'\n')
+```
+We can now examine how the variance components evolve over time in our best‐fitting model. Early on, individual‐level variability dominates, but by the final measurement occasion the group‐level variance takes over. Overall, the group effect starts small yet steadily increases, measurement error remains small, and individual variability declines. These patterns confirm a pronounced non‐stationary process at both the group and individual levels.
+```{r variance, echo=FALSE}
+Covs <- get.Cov(GP.h2$covariances,GP.h2$object)
+
+dat <- data.frame(t = 0:3, 
+                  VeY = diag(Covs$SigmaE),
+                  VP = diag(Covs$SigmaI),
+                  VG = diag(Covs$SigmaT))
+dat$tot <- rowSums(dat[,2:4])
+dat$PVeY <- dat$VeY/dat$tot
+dat$PVP <- dat$VP/dat$tot
+dat$PVG <- dat$VG/dat$tot
+dat$PVY <- dat$tot/dat$tot
+dat$VY <- dat$tot
+
+
+pvar <- dat %>% 
+  pivot_longer(c(VeY,VP,VG,VY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Variance") +
+  xlab("Time") +
+  #  scale_color_discrete(name="",labels = c("VeY" = TeX('$\\V[e^Y_{tij}]$'),"VG" = TeX('$\\V[G_{tij}]$'),"VP" = TeX('$\\V[P_{tij}]$'),"VY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  scale_linetype_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  theme(legend.position = "none")
+
+pperc <- dat %>% 
+  pivot_longer(c(PVeY,PVP,PVG,PVY),names_to = "var",values_to = "value") %>% 
+  ggplot(aes(x=t,y=value,col=var,linetype=var)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()+
+  ylab("Proportion") +
+  xlab("Time") +
+  # scale_color_discrete(name="",labels = c("PVeY" = TeX('$\\V[e^Y_{tij}]$'),"PVG" = TeX('$\\V[G_{tij}]$'),"PVP" = TeX('$\\V[P_{tij}]$'),"PVY" = TeX('$\\V[Y_{tij}]$')))+
+  scale_color_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  scale_linetype_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  theme(legend.position = "right")
+
+Figure4 <- ggpubr::ggarrange(pvar, pperc, 
+                      #labels = c("A", "B"),
+                      ncol = 2, nrow = 1,
+                      common.legend = T,
+                      legend="bottom")
+print(Figure4)
+```

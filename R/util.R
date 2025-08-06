@@ -247,6 +247,129 @@ paramToList <- function(param, obj){
   }
   return(paramList)
 }
+#' Converts a parameter list back into a single parameter vector
+#'
+#' Reverse of `paramToList()`: takes a list of parameters organized by error,
+#' individual, and team covariance functions and concatenates them into a single
+#' numeric vector in the same order that `paramToList()` consumes.
+#'
+#' @param paramList A list as returned by `paramToList()`, with elements:
+#'   \itemize{
+#'     \item{error:}{ List of length \code{length(obj$errorCovs)}, each a numeric vector of parameters for that error covariance.}
+#'     \item{indv:}{ (Optional) List of length \code{length(obj$indvCovs)}, each a numeric vector of parameters for that individual covariance.}
+#'     \item{team:}{ (Optional) List of length \code{length(obj$teamCovs)}, each a numeric vector of parameters for that team covariance.}
+#'   }
+#' @param obj An object with the same structure used in `paramToList()`, containing
+#'   \code{errorCovs}, \code{indvCovs}, and \code{teamCovs} lists of covariance objects.
+#'   Each covariance object must implement \code{get_param_length()}.
+#' @return A numeric vector combining all parameters in the order:
+#'   all entries of \code{paramList$error}, then \code{paramList$indv}, then \code{paramList$team}.
+#' @examples
+#' # Given `obj` used to create `paramList`:
+#' # paramList <- paramToList(param, obj)
+#' # backToVec <- listToParam(paramList, obj)
+#' # identical(backToVec, param)
+#' @author Your Name
+#' @date 2025-08-01
+#' @export
+listToParam <- function(paramList, obj) {
+  # Initialize an empty numeric vector
+  param <- numeric(0)
+  
+  # 1) Error covariance parameters
+  if (!is.null(paramList$error) && length(obj$errorCovs) > 0) {
+    for (i in seq_along(obj$errorCovs)) {
+      block <- paramList$error[[i]]
+      if (length(block) != obj$errorCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$error[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$errorCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  # 2) Individual covariance parameters
+  if (!is.null(paramList$indv) && length(obj$indvCovs) > 0) {
+    for (i in seq_along(obj$indvCovs)) {
+      block <- paramList$indv[[i]]
+      if (length(block) != obj$indvCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$indv[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$indvCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  # 3) Team covariance parameters
+  if (!is.null(paramList$team) && length(obj$teamCovs) > 0) {
+    for (i in seq_along(obj$teamCovs)) {
+      block <- paramList$team[[i]]
+      if (length(block) != obj$teamCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$team[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$teamCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  return(param)
+}
+
+#' Updates only the team covariance parameters in an existing parameter list
+#'
+#' A helper to replace just the \code{paramList$team} entries in a list produced by
+#' \code{paramToList()}, by splitting a new flat vector of parameters according to
+#' the expected lengths of each team covariance object.
+#'
+#' @param paramList A parameter list as returned by \code{paramToList()}; only the
+#'   \code{team} component will be modified.
+#' @param obj An object with a \code{teamCovs} list; each covariance object must
+#'   implement \code{get_param_length()}.
+#' @param teamParam Numeric vector of new parameters for all team covariance functions,
+#'   concatenated in the same order as \code{obj$teamCovs}.
+#' @return The original \code{paramList} with \code{paramList$team} replaced by the
+#'   newly split parameters.
+#' @examples
+#' # Suppose `paramList` was created via paramToList(param, obj)
+#' # newTeamParam <- c(...)  # flat vector of correct total length
+#' # updated <- updateTeamParamList(paramList, obj, newTeamParam)
+#' @export
+updateTeamParamList <- function(paramList, obj, teamParam) {
+  # If there are no team covariances, warn and return original
+  if (length(obj$teamCovs) == 0) {
+    warning("No team covariance objects to update.")
+    return(paramList)
+  }
+  
+  # Compute total expected length, coercing to integer
+  expected <- sum(vapply(obj$teamCovs,
+                         function(cov) as.integer(cov$get_param_length()),
+                         integer(1)))
+  if (length(teamParam) != expected) {
+    stop(sprintf(
+      "Length of teamParam (%d) does not match total expected (%d)",
+      length(teamParam), expected
+    ))
+  }
+  
+  # Split and assign
+  paramList$team <- vector("list", length(obj$teamCovs))
+  idx <- 1L
+  for (i in seq_along(obj$teamCovs)) {
+    n <- as.integer(obj$teamCovs[[i]]$get_param_length())
+    paramList$team[[i]] <- teamParam[idx:(idx + n - 1)]
+    idx <- idx + n
+  }
+  
+  return(paramList)
+}
+
 #'
 #'
 #' creates a zero guess of the parameters list 
@@ -308,4 +431,177 @@ get.Cov <- function(paramList, object, team.id=1, Indv.id=1){
               SigmaT = SigmaT,
               Sigma = SigmaE+SigmaI+SigmaT))
 }
+
+#' Converts a parameter list back into a single parameter vector
+#'
+#' Reverse of `paramToList()`: takes a list of parameters organized by error,
+#' individual, and team covariance functions and concatenates them into a single
+#' numeric vector in the same order that `paramToList()` consumes.
+#'
+#' @param paramList A list as returned by `paramToList()`, with elements:
+#'   \itemize{
+#'     \item{error:}{ List of length \code{length(obj$errorCovs)}, each a numeric vector of parameters for that error covariance.}
+#'     \item{indv:}{ (Optional) List of length \code{length(obj$indvCovs)}, each a numeric vector of parameters for that individual covariance.}
+#'     \item{team:}{ (Optional) List of length \code{length(obj$teamCovs)}, each a numeric vector of parameters for that team covariance.}
+#'   }
+#' @param obj An object with the same structure used in `paramToList()`, containing
+#'   \code{errorCovs}, \code{indvCovs}, and \code{teamCovs} lists of covariance objects.
+#'   Each covariance object must implement \code{get_param_length()}.
+#' @return A numeric vector combining all parameters in the order:
+#'   all entries of \code{paramList$error}, then \code{paramList$indv}, then \code{paramList$team}.
+#' @examples
+#' # Given `obj` used to create `paramList`:
+#' # paramList <- paramToList(param, obj)
+#' # backToVec <- listToParam(paramList, obj)
+#' # identical(backToVec, param)
+#' @author Your Name
+#' @date 2025-08-01
+#' @export
+listToParam <- function(paramList, obj) {
+  param <- numeric(0)
+  
+  if (!is.null(paramList$error) && length(obj$errorCovs) > 0) {
+    for (i in seq_along(obj$errorCovs)) {
+      block <- paramList$error[[i]]
+      if (length(block) != obj$errorCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$error[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$errorCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  if (!is.null(paramList$indv) && length(obj$indvCovs) > 0) {
+    for (i in seq_along(obj$indvCovs)) {
+      block <- paramList$indv[[i]]
+      if (length(block) != obj$indvCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$indv[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$indvCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  if (!is.null(paramList$team) && length(obj$teamCovs) > 0) {
+    for (i in seq_along(obj$teamCovs)) {
+      block <- paramList$team[[i]]
+      if (length(block) != obj$teamCovs[[i]]$get_param_length()) {
+        stop(sprintf(
+          "Length of paramList$team[[%d]] (%d) does not match expected (%d)",
+          i, length(block), obj$teamCovs[[i]]$get_param_length()
+        ))
+      }
+      param <- c(param, block)
+    }
+  }
+  
+  return(param)
+}
+
+#' Updates only the team covariance parameters in an existing parameter list
+#'
+#' A helper to replace just the \code{paramList$team} entries in a list produced by
+#' \code{paramToList()}, by splitting a new flat vector of parameters according to
+#' the expected lengths of each team covariance object.
+#'
+#' @param paramList A parameter list as returned by \code{paramToList()}; only the
+#'   \code{team} component will be modified.
+#' @param obj An object with a \code{teamCovs} list; each covariance object must
+#'   implement \code{get_param_length()}.
+#' @param teamParam Numeric vector of new parameters for all team covariance functions,
+#'   concatenated in the same order as \code{obj$teamCovs}.
+#' @return The original \code{paramList} with \code{paramList$team} replaced by the
+#'   newly split parameters.
+#' @examples
+#' # Suppose `paramList` was created via paramToList(param, obj)
+#' # newTeamParam <- c(...)  # flat vector of correct total length
+#' # updated <- updateTeamParamList(paramList, obj, newTeamParam)
+#' @export
+updateTeamParamList <- function(paramList, obj, teamParam) {
+  if (length(obj$teamCovs) == 0) {
+    warning("No team covariance objects to update.")
+    return(paramList)
+  }
+  
+  expected <- sum(vapply(obj$teamCovs,
+                         function(cov) as.integer(cov$get_param_length()),
+                         integer(1)))
+  if (length(teamParam) != expected) {
+    stop(sprintf(
+      "Length of teamParam (%d) does not match total expected (%d)",
+      length(teamParam), expected
+    ))
+  }
+  
+  paramList$team <- vector("list", length(obj$teamCovs))
+  idx <- 1L
+  for (i in seq_along(obj$teamCovs)) {
+    n <- as.integer(obj$teamCovs[[i]]$get_param_length())
+    paramList$team[[i]] <- teamParam[idx:(idx + n - 1)]
+    idx <- idx + n
+  }
+  
+  return(paramList)
+}
+
+#' Updates only the error and individual covariance parameters in an existing parameter list
+#'
+#' A helper to replace just the \code{paramList$error} and \code{paramList$indv} entries
+#' in a list produced by \code{paramToList()}, by splitting a new flat vector of
+#' parameters according to the expected lengths of each error and individual covariance object.
+#'
+#' @param paramList A parameter list as returned by \code{paramToList()}; only the
+#'   \code{error} and \code{indv} components will be modified.
+#' @param obj An object with \code{errorCovs} and \code{indvCovs} lists;
+#'   each covariance object must implement \code{get_param_length()}.
+#' @param errorIndvParam Numeric vector of new parameters for all error and individual
+#'   covariance functions, concatenated in the same order as `c(obj$errorCovs, obj$indvCovs)`.
+#' @return The original \code{paramList} with \code{paramList$error} and
+#'   \code{paramList$indv} replaced by the newly split parameters.
+#' @examples
+#' # Suppose `paramList` was created via paramToList(param, obj)
+#' # newEI <- c(...)  # flat vector of correct total length for error+indv
+#' # updated <- updateErrorIndvParamList(paramList, obj, newEI)
+#' @export
+updateErrorIndvParamList <- function(paramList, obj, errorIndvParam) {
+  # Compute expected lengths
+  err_lengths <- vapply(obj$errorCovs,
+                        function(cov) as.integer(cov$get_param_length()),
+                        integer(1))
+  ind_lengths <- vapply(obj$indvCovs,
+                        function(cov) as.integer(cov$get_param_length()),
+                        integer(1))
+  expected <- sum(err_lengths) + sum(ind_lengths)
+  
+  if (length(errorIndvParam) != expected) {
+    stop(sprintf(
+      "Length of errorIndvParam (%d) does not match total expected (%d)",
+      length(errorIndvParam), expected
+    ))
+  }
+  
+  # Split into two parts
+  idx <- 1L
+  # Error
+  paramList$error <- vector("list", length(obj$errorCovs))
+  for (i in seq_along(obj$errorCovs)) {
+    n <- err_lengths[i]
+    paramList$error[[i]] <- errorIndvParam[idx:(idx + n - 1)]
+    idx <- idx + n
+  }
+  # Individual
+  paramList$indv <- vector("list", length(obj$indvCovs))
+  for (j in seq_along(obj$indvCovs)) {
+    n <- ind_lengths[j]
+    paramList$indv[[j]] <- errorIndvParam[idx:(idx + n - 1)]
+    idx <- idx + n
+  }
+  
+  return(paramList)
+}
+
 
