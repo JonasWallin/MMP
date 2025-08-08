@@ -1,4 +1,10 @@
 useDynLib(MMP)
 import(RcppEigen)
 importFrom(Rcpp, evalCpp)
+importFrom(dplyr, group_by, summarise, ungroup, mutate, arrange, left_join, first)
+importFrom(ggplot2, ggplot, geom_line, geom_point, geom_ribbon, aes, 
+           scale_linetype_discrete, scale_color_discrete, theme_bw, labs)
+importFrom(Matrix, solve, diag, t)
+importFrom(rSPDE, matern.covariance)
+importFrom(tibble, tibble)
 exportPattern("^[[:alpha:]]+")

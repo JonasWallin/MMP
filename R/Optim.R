@@ -302,8 +302,8 @@ likelihood.groupavg <- function(param, Obj){
       y_i  = Obj$teams[[i]]$data$Y,
       idx  = seq_along(time)        # original position
     ) %>%
-      group_by(time) %>%
-      summarise(
+      dplyr::group_by(time) %>%
+      dplyr::summarise(
         first_idx = first(idx),     # grabs the smallest original index
         y_avg     = mean(y_i),      # group mean
         .groups   = "drop"
@@ -355,13 +355,13 @@ likelihood.degroup <- function(param, Obj){
       y_i  = Team_i$data$Y,
       idx  = seq_along(time)
     ) %>%
-      group_by(time) %>%
-      mutate(
+      dplyr::group_by(time) %>%
+      dplyr::mutate(
         # subtract the group mean from each observation
         y_centered = y_i - mean(y_i)
       ) %>%
-      ungroup() %>%
-      arrange(idx) 
+      dplyr::ungroup() %>%
+      dplyr::arrange(idx) 
     Sigma_X    <- matrix(0, nrow = Team_i$n_obs,
                          ncol = Team_i$n_obs)
     y_i <- y.residuals$y_centered

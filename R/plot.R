@@ -1,9 +1,6 @@
 #### Plots
 
 
-library(dplyr)
-library(ggplot2)
-
 rt <- function(x, time) {
   model <- x$model$Method
   # CEM2

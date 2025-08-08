@@ -2,7 +2,6 @@
 # covaraince processes for teamObject
 #
 #
-library(rSPDE)
 
 #'OUcov
 #'

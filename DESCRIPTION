@@ -14,7 +14,10 @@ Imports:
   dplyr,
   Matrix,
   rSPDE,
-  tidyverse
+  tidyverse,
+  ggplot2,
+  MASS,
+  tibble
 LinkingTo: Rcpp, RcppEigen
 Depends: 
     R (>= 2.10)
