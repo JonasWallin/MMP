@@ -94,7 +94,8 @@ predict.ce <- function(ce.object, new.data, return.all = F){
                   ce.object$model$Method,
                   data,
                   ce.object$model$`Team process`,
-                  ce.object$model$Time)
+                  ce.object$model$Time,
+                  ce.object$model$GP.type)
   object <- dataToObject(pred.data)
  
   smoothRes <- predict.indv(ce.object$res$par, object,ce.object$object)

@@ -33,7 +33,8 @@ getData <- function(formula1,
                     method,
                     data,
                     method.team = NULL,
-                    time = NULL) {
+                    time = NULL,
+                    GP.type = NULL) {
   
   ### Xf and y
   
@@ -234,7 +235,8 @@ getData <- function(formula1,
                    wNOISE      = wNOISE,
                    names       = names,
                    method      = method,
-                   method.team = method.team)
+                   method.team = method.team,
+                   GP.type = GP.type)
   
 
   return(matrices)

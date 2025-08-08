@@ -210,7 +210,7 @@ GP <- ce(y ~ 1+time,
          param = par)
 
 ```
-The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on indivual level is basically equivalent to the Gaussian process.
+The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process.
 ```{r AIC, echo=FALSE}
 cat('AIC_GP_GP = ', GP.h2$AIC,'\n')
 cat('AIC_CEI_GP = ', CEI2.h2$AIC,'\n')
@@ -264,4 +264,49 @@ Figure4 <- ggpubr::ggarrange(pvar, pperc,
                       common.legend = T,
                       legend="bottom")
 print(Figure4)
+```
+
+Finally we also show how a prediction of a individual future response also what was the likely response between observations. We can see that the uncertainty increases as at the end this due to the
+increasing variability of the group effect. It should be noted that the exact form of this variability
+is rather uncertain. We can also see that the 95% prediction intervals goes down next two the observations. This is since we have rather small measurement error we are rather certain of the value
+of the processes at the measurement locations. 
+```{r prediction, echo=FALSE}
+n.time = 100
+sherifdat.new <- data.frame(person = c(rep(1,n.time)),
+                            group  = c(rep(1,n.time)),
+                            time   = c(seq(0,4.5,length.out = n.time) ))
+pred.data.new   <- predict.ce(GP.h2, sherifdat.new)
+# 1) Build a data frame of predictions + CIs
+pred_df <- tibble(
+  time = sherifdat.new$time,
+  fit  = pred.data.new[,1],
+  se   = sqrt(pred.data.new[,3])
+) %>%
+  mutate(
+    lower = fit - 2*se,
+    upper = fit + 2*se
+  )
+
+# 2) Extract the observed points for person 1, group 1
+obs_df <- sherifdat %>%
+  filter(person == 1, group == 1)
+
+# 3) Plot with ribbon + line + points
+fig <- ggplot(pred_df, aes(x = time)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper),
+              fill = "firebrick", alpha = 0.2) +
+  geom_line(aes(y = fit), color = "firebrick", size = 1) +
+  geom_point(data = obs_df, aes(x = time, y = y),
+             color = "steelblue", size = 2) +
+  labs(
+    title = "Fitted GP Curve ± 2 SE",
+    x     = "Time",
+    y     = "Autokinetic Estimate"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title       = element_text(face = "bold", hjust = 0.5),
+    panel.grid.minor = element_blank()
+  )
+print(fig)
 ```
