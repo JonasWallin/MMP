@@ -398,3 +398,130 @@ likelihood.degroup <- function(param, Obj){
   
   return(loglik)
 }
+
+#' Estimate mu, error, and team effects via maximum likelihood
+#'
+#' Jointly estimates the global mean \eqn{\mu}, **error**, and **team**
+#' covariance parameters by maximizing the likelihood of time-averaged data.
+#' The parameter vector must be ordered as:
+#' \code{c(mu, error blocks..., team blocks...)}.
+#'
+#' @param param_list A parameter list as returned by \code{paramToList()}.
+#' @param Obj A wrapper with field \code{object} holding \code{errorCovs},
+#'   \code{teamCovs}, and \code{teams}.
+#' @param init_param Numeric vector of initial guesses concatenated as
+#'   \code{c(mu, error blocks..., team blocks...)}.
+#' @param control List passed to \code{optim}; default \code{list(maxit=1000, trace=FALSE)}.
+#'
+#' @return The updated \code{param_list} with new \code{error} and \code{team}
+#'   entries (other components unchanged). The MLE of \code{mu} is not stored in
+#'   \code{param_list}; retrieve it from the optimizer if needed.
+#'
+#' @examples
+#' # init <- c(mu0, err_pars..., team_pars...)
+#' # param_list <- estimate_error_team_effects(param_list, Obj, init)
+#' @export
+estimate_error_team_effects <- function(param_list,
+                                        Obj,
+                                        init_param,
+                                        control = list(maxit = 1000, trace = FALSE)) {
+  nll <- function(p) -likelihood.errteam_avg(p, Obj$object)
+  
+  fit1 <- optim(par = init_param, fn = nll, method = "BFGS", control = control)
+  fit2 <- optim(par = fit1$par, fn = nll, method = "BFGS", control = control)
+  
+  # Write back ONLY error+team (exclude the first element mu)
+  fitted_mu <- fit2$par[1]
+  fitted_rest <- fit2$par[-1]
+  
+  param_list <- updateErrorTeamParamList(param_list, Obj$object, fitted_rest)
+  
+  # If you want to keep mu accessible without changing structures elsewhere:
+  # attr(param_list, "mu_hat") <- fitted_mu
+  
+  return(param_list)
+}
+
+# Internal: joint log-likelihood for c(mu, error..., team...) on time-averaged data
+likelihood.errteam_avg <- function(param, Obj) {
+  if (length(Obj$errorCovs) == 0L || length(Obj$teamCovs) == 0L) {
+    stop("likelihood.errteam_avg requires both errorCovs and teamCovs.")
+  }
+  
+  # Split param -> mu | error blocks | team blocks
+  mu <- param[1]
+  rest <- param[-1]
+  
+  # Extract error
+  paramList <- list(error = vector("list", length(Obj$errorCovs)),
+                    team  = vector("list", length(Obj$teamCovs)))
+  idx <- 1L
+  for (i in seq_along(Obj$errorCovs)) {
+    n <- as.integer(Obj$errorCovs[[i]]$get_param_length())
+    paramList$error[[i]] <- rest[idx:(idx + n - 1L)]
+    idx <- idx + n
+  }
+  # Extract team
+  for (i in seq_along(Obj$teamCovs)) {
+    n <- as.integer(Obj$teamCovs[[i]]$get_param_length())
+    paramList$team[[i]] <- rest[idx:(idx + n - 1L)]
+    idx <- idx + n
+  }
+  
+  loglik <- 0
+  
+  for (i in seq_along(Obj$teams)) {
+    Team_i <- Obj$teams[[i]]
+    n_obs  <- Team_i$n_obs
+    y_full <- Team_i$data$Y
+    times  <- Team_i$time
+    
+    # Build index sets per unique time, preserving first-occurrence order
+    idx_list_raw <- split(seq_len(n_obs), times)
+    first_pos <- vapply(idx_list_raw, function(id) min(id), numeric(1))
+    ord <- order(first_pos)
+    idx_list <- idx_list_raw[ord]
+    m <- length(idx_list)
+    
+    # Time-averaged observations and mean vector
+    y_bar <- vapply(idx_list, function(id) mean(y_full[id]), numeric(1))
+    mu_vec <- rep(mu, m)
+    
+    # Aggregation matrix M (m x n_obs) with rows summing to 1 within time
+    M <- matrix(0, nrow = m, ncol = n_obs)
+    for (t in seq_len(m)) {
+      id <- idx_list[[t]]
+      M[t, id] <- 1 / length(id)
+    }
+    
+    # Team covariance on full grid, then aggregate: M * Sigma_team * M^T
+    Sigma_team_full <- matrix(0, nrow = n_obs, ncol = n_obs)
+    for (k in seq_along(Obj$teamCovs)) {
+      Sigma_team_full <- Sigma_team_full +
+        as.matrix(Obj$teamCovs[[k]]$get_AtCA(paramList$team[[k]], Team_i))
+    }
+    Sigma_team_bar <- M %*% Sigma_team_full %*% t(M)
+    
+    # Error variances on full grid, then aggregate diagonals with 1/n_t^2
+    d_full <- numeric(n_obs)
+    for (k in seq_along(Obj$errorCovs)) {
+      d_full <- d_full + Obj$errorCovs[[k]]$add_diagonal(paramList$error[[k]], Team_i)
+    }
+    d_bar <- vapply(idx_list, function(id) sum(d_full[id]) / (length(id)^2), numeric(1))
+    
+    # Final covariance for y_bar
+    Sigma <- Sigma_team_bar
+    diag(Sigma) <- diag(Sigma) + d_bar
+    
+    # PD check and log-likelihood via Cholesky (like your other functions)
+    L <- tryCatch(chol(Sigma), error = function(e) NULL)
+    if (is.null(L)) return(-Inf)  # => nll = Inf
+    
+    Ly <- tryCatch(solve(t(L), y_bar - mu_vec), error = function(e) NULL)
+    if (is.null(Ly)) return(-Inf)
+    
+    loglik <- loglik - 0.5 * drop(t(Ly) %*% Ly) - sum(log(diag(L)))
+  }
+  
+  return(loglik)
+}

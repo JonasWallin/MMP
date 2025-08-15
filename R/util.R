@@ -602,4 +602,72 @@ updateErrorIndvParamList <- function(paramList, obj, errorIndvParam) {
   return(paramList)
 }
 
+#' Update only error and team covariance parameters in a parameter list
+#'
+#' Splits a flat parameter vector into **error** and **team** covariance blocks
+#' (in that order) according to \code{obj$errorCovs} and \code{obj$teamCovs}, and
+#' writes them into \code{paramList$error} and \code{paramList$team} respectively.
+#' Other components (e.g. \code{paramList$indv}) are left unchanged.
+#'
+#' Use this when optimizing a criterion that packs error followed by team
+#' parameters into a single vector.
+#'
+#' @param paramList A parameter list as returned by \code{paramToList()}.
+#' @param obj An object with \code{errorCovs} and \code{teamCovs};
+#'   each covariance object must implement \code{get_param_length()}.
+#' @param errTeamParam Numeric vector of parameters concatenated as
+#'   \code{c(error blocks..., team blocks...)}.
+#'
+#' @return The modified \code{paramList} with updated \code{error} and \code{team}
+#'   entries only.
+#' @examples
+#' # errTeamParam <- c(err_pars..., team_pars...)
+#' # paramList <- updateErrorTeamParamList(paramList, obj, errTeamParam)
+#' @export
+updateErrorTeamParamList <- function(paramList, obj, errTeamParam) {
+  # Expected lengths
+  n_err  <- if (length(obj$errorCovs) > 0) {
+    sum(vapply(obj$errorCovs, function(cov) as.integer(cov$get_param_length()), integer(1)))
+  } else 0L
+  n_team <- if (length(obj$teamCovs) > 0) {
+    sum(vapply(obj$teamCovs,  function(cov) as.integer(cov$get_param_length()), integer(1)))
+  } else 0L
+  expected <- n_err + n_team
+  
+  if (length(errTeamParam) != expected) {
+    stop(sprintf(
+      "Length of errTeamParam (%d) does not match expected total (%d = %d error + %d team).",
+      length(errTeamParam), expected, n_err, n_team
+    ))
+  }
+  
+  idx <- 1L
+  
+  ## Error blocks
+  if (length(obj$errorCovs) > 0) {
+    paramList$error <- vector("list", length(obj$errorCovs))
+    for (i in seq_along(obj$errorCovs)) {
+      n <- as.integer(obj$errorCovs[[i]]$get_param_length())
+      paramList$error[[i]] <- errTeamParam[idx:(idx + n - 1L)]
+      idx <- idx + n
+    }
+  } else {
+    paramList$error <- NULL
+  }
+  
+  ## Team blocks
+  if (length(obj$teamCovs) > 0) {
+    paramList$team <- vector("list", length(obj$teamCovs))
+    for (i in seq_along(obj$teamCovs)) {
+      n <- as.integer(obj$teamCovs[[i]]$get_param_length())
+      paramList$team[[i]] <- errTeamParam[idx:(idx + n - 1L)]
+      idx <- idx + n
+    }
+  } else {
+    paramList$team <- NULL
+  }
+  
+  return(paramList)
+}
+
 

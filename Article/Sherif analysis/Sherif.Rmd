@@ -112,7 +112,7 @@ var_time_df <- sherifdat_cell_demeaned %>%
 print(var_time_df)
 
 ```
-We then fit a baseline model to these data. Given the model’s complexity, convergence to a global optimum isn’t guaranteed, and in fact the initial fit suggests a pattern that contradicts our expectations: the estimated group‐level variance actually decreases rather than increases over time.
+We then fit a baseline model to these data. 
 ```{r fit model, echo=FALSE}
 GP.h <- ce(y ~ 1, 
            ~ 1 | person, 
@@ -123,33 +123,17 @@ GP.h <- ce(y ~ 1,
            time = "time",
            data = sherifdat)
 ```
-
+And examine how the variability changes over time on group and individual level.
 ```{r fit model, echo=FALSE}
 Covs_inital.fit <- get.Cov(GP.h$covariances,GP.h$object)
 print('Variance for team effect over time')
 print(diag(Covs_inital.fit$SigmaT))
+Covs_inital.fit <- get.Cov(GP.h$covariances,GP.h$object)
+print('Variance for individual effect over time')
+print(diag(Covs_inital.fit$SigmaI))
 ```
 
-Next, we estimate the group‐level and individual‐level parameters separately—using each set of estimates as starting values for the full model refit. After refitting, the group‐level variance now follows the upward trajectory over time seen in the data.
-```{r refit, echo=FALSE}
-param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
-param_list <- estimate_group_effects(GP.h$covariances, GP.h, param.group)
-param <- c(0,0,0,0,0) #meauserment error
-param_list <- estimate_error_indv_effects(param_list, GP.h, param)
-par <- listToParam(param_list,GP.h$object)
-GP.h2 <- ce(y ~ 1, 
-           ~ 1 | person, 
-           ~ 1 | group, 
-           emergence = ~ 1, 
-           method = "GP",
-           method.team = "OU.homeostasis",
-           time = "time",
-           data = sherifdat,
-           param = par)
-Covs.fit <- get.Cov(GP.h2$covariances,GP.h2$object)
-print('Variance for team effect over time')
-print(diag(Covs.fit$SigmaT))
-```
+
 We now also explore if a linear random effect model for individuals could be better.
 ```{r linear random effect model, echo=FALSE}
 #random effects for indivuals
@@ -161,34 +145,7 @@ CEI2.h <- ce(y ~ 1+time,
              method = "CEI2", 
              method.team = "OU.homeostasis",
              data = sherifdat)
-param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
-param_list <- estimate_group_effects(CEI2.h$covariances, CEI2.h, param.group)
-param <- c(0,0,0,0) #meauserment error
-param_list <- estimate_error_indv_effects(param_list, CEI2.h, param)
-par <- listToParam(param_list,CEI2.h$object)
-CEI2.h2 <- ce(y ~ 1+time, 
-             ~ 1 | person, 
-             ~ 1 | group, 
-             emergence = ~ -1 + time, 
-             time = "time",
-             method = "CEI2", 
-             method.team = "OU.homeostasis",
-             data = sherifdat,
-             param = par)
 
-CEI2.h <- ce(y ~ 1+time, 
-             ~ 1 | person, 
-             ~ 1 | group, 
-             emergence = ~ -1 + time, 
-             time = "time",
-             method = "CEI2", 
-             method.team = "OU.homeostasis",
-             data = sherifdat)
-param.group <- c(3,0.1,0.1,0.1,0.1) # first parameter is mean of the group, rest is just random
-param_list <- estimate_group_effects(CEI2.h$covariances, CEI2.h, param.group)
-param <- c(0,0,0,0) #meauserment error
-param_list <- estimate_error_indv_effects(param_list, CEI2.h, param)
-par <- listToParam(param_list,CEI2.h$object)
 
 # random effect for groups not as complicate
 GP <- ce(y ~ 1+time, 
@@ -197,21 +154,10 @@ GP <- ce(y ~ 1+time,
          emergence = ~ 1, 
          method = "GP",
          time = "time",
-         data = sherifdat)
-param <- c(0,0,0,0,0) #meauserment error
-param_list <- estimate_error_indv_effects(GP$covariances, GP, param)
-par <- listToParam(param_list,GP$object)
-GP <- ce(y ~ 1+time, 
-         ~ 1 | person, 
-         ~ 1 + time | group, 
-         emergence = ~ 1, 
-         method = "GP",
-         time = "time",
          data = sherifdat,
-         param = par)
-
+         optimize = FALSE)
 ```
-The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process.
+The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process. While a random effect model for groups is clearly much wosrse.
 ```{r AIC, echo=FALSE}
 cat('AIC_GP_GP = ', GP.h2$AIC,'\n')
 cat('AIC_CEI_GP = ', CEI2.h2$AIC,'\n')
