@@ -122,6 +122,7 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
   # = -0.5 (D%*%C)^T D^{-1} D%*%C + C^T * D^{-1} (D%*%C)
   # 
   if(is.null(Obj$X) ==F){
+    
     beta = solve(XtSigmainvX, t(ySigmainvX))
     lik <- lik + 0.5 * ySigmainvX%*%beta
     
@@ -317,10 +318,12 @@ likelihood.groupavg <- function(param, Obj){
     y_i <- y.avg.pos$y_avg
     # calculate the likelihood of y_i which is zero mean and covariance Sigma_X
     # check if Sigma_X si positive definite
-    if (any(eigen(Sigma_X)$values <= 0)) {
+ 
+    L = tryCatch({L <- chol(Sigma_X)}, error = function(err){return(Inf)})
+    Ly = tryCatch({Ly <- solve(t(L),y_i-mu)}, error = function(err){return(Inf)})
+    if(is.null(dim(L)))
       return(Inf)
-    }
-    loglik <- loglik -0.5 * (t(y_i-mu) %*% solve(Sigma_X, y_i-mu)) -0.5* log(det(Sigma_X)) 
+    loglik <- loglik -0.5 * t(Ly) %*% Ly - sum(log(diag(L)))
   }
   
   return(loglik)

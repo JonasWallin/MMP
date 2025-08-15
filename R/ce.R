@@ -11,7 +11,8 @@ ce <- function(formula1,
                data.in,
                REML = F,
                GP.type="OU.homeostasis",
-               param = NULL) {
+               param = NULL,
+               optimize = TRUE) {
   
   data <- getData(formula1, 
                   formula2, 
@@ -40,15 +41,18 @@ ce <- function(formula1,
     param <- param0(object)
   
   if (model$Method == "GP") {
-  
-  res <-optim(param, function(x){-loglik(x, object,REML ) })
-  res <-optim(res$par, function(x){-loglik(x, object, REML) })
-  
-    if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object, REML) },control = list(maxit=5000))
+  if(optimize){
+    res <-optim(param, function(x){-loglik(x, object,REML ) })
+    res <-optim(res$par, function(x){-loglik(x, object, REML) })
+    
       if (res$convergence != 0) {
-      res <-optim(res$par, function(x){-loglik(x, object, REML) })
+        res <-optim(res$par, function(x){-loglik(x, object, REML) },control = list(maxit=5000))
+        if (res$convergence != 0) {
+        res <-optim(res$par, function(x){-loglik(x, object, REML) })
+        }
       }
+  }else{
+    res <-optim(param, function(x){-loglik(x, object, REML) },control = list(maxit=2))
     }
   
   } else {
