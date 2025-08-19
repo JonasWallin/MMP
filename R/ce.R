@@ -87,8 +87,8 @@ ce <- function(formula1,
   loglik <- loglik(res$par, object)-n*log(sqrt(2*pi))
   
   # AIC: 2*k - 2*loglik, k = number of estimated parameters 
-  k <- sum(length(paramPlot),
-           length(betas))
+  k <- length(paramPlot) + 
+           length(betas)
   
   aic <- (2*k)-(2*loglik)
   

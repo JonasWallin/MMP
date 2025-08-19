@@ -71,7 +71,7 @@ CEI2 <- ce(y ~ 1+time,
            REML = F)
 
 # GP 
-GP <- ce(y ~ 1+time, 
+GP <- ce(y ~ 1 + time, 
          ~ 1 | person, 
          ~ 1 + time | group, 
          emergence = ~ 1, 
@@ -90,15 +90,7 @@ CEM2.h <- ce(y ~ 1+time,
              method.team = "OU.homeostasis",
              data = sherifdat)
 
-# HomCEM
-CEI2.h <- ce(y ~ 1+time, 
-             ~ 1 | person, 
-             ~ 1 | group, 
-             emergence = ~ -1 + time, 
-             time = "time",
-             method = "CEI2", 
-             method.team = "OU.homeostasis",
-             data = sherifdat)
+
 
 # GP
 GP.h <- ce(y ~ 1+time, 
@@ -110,33 +102,63 @@ GP.h <- ce(y ~ 1+time,
            time = "time",
            data = sherifdat)
 
+CEI2.h <- ce(y ~ 1 + time, 
+                    ~ 1 | person, 
+                    ~ 1 | group, 
+                    emergence = ~ -1 + time, 
+                    time = "time",
+                    method = "CEI2", 
+                    method.team = "OU.homeostasis",
+                    data = sherifdat)
+# HomCEM
+CEI2.h_notime <- ce(y ~ 1, 
+             ~ 1 | person, 
+             ~ 1 | group, 
+             emergence = ~ -1 + time, 
+             time = "time",
+             method = "CEI2", 
+             method.team = "OU.homeostasis",
+             data = sherifdat)
+
+# GP
+GP.h_notime <- ce(y ~ 1, 
+           ~ 1 | person, 
+           ~ 1 | group, 
+           emergence = ~ 1, 
+           method = "GP",
+           method.team = "OU.homeostasis",
+           time = "time",
+           data = sherifdat)
+
 #########
 #Table 1
 #########
-names <- c("L:null","L:HetCEM","L:HomCEM","L:GP","GP:HetCEM","GP:HomCEM","GP:GP")
-models <- list(null,CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h)
+names <- c("null model","HetCEM","HomCEM","GP","HetCEM","HomCEM","GP","HomCEM no slope","GP no slope")
+models <- list(null,CEM2,CEI2,GP,CEM2.h,CEI2.h,GP.h, CEI2.h_notime, GP.h_notime)
 Table <- akaike.weight(models, 
                          names)
 Table <- data.frame(Model = Table$names,
                     AIC =  sapply(models, function(i) i$AIC),
                     loglik = sapply(models, function(i) i$loglik),
                     "Akaike weight" =  Table$weight)
-Table$Akaike.weight <- round(Table$Akaike.weight,2)
+Table$Akaike.weight <- round(Table$Akaike.weight,3)
+
 print(xtable::xtable(Table))
 
 ###########
 # Table 3 (appendix)
 ##########
 
-Table3 <- c(CEI2.h$betas,  #betas
-            exp(2 * CEI2.h$covariances$indv[[1]]), #sigma^2_v0
-            exp(2 * CEI2.h$covariances$indv[[2]][2]), #sigma^2_v1
-            CEI2.h$covariances$indv[[2]][1], #delta_v
-            exp(2 * CEI2.h$covariances$team[[1]]), # sigma^2_tau0
-            exp(2 * CEI2.h$covariances$team[[2]][2] - CEI2.h$covariances$team[[2]][3])/2, # sigma^2_tau1
-            CEI2.h$covariances$team[[2]][1], #delta_tau
-            exp(- CEI2.h$covariances$team[[2]][3]), #kappa_tau
-            exp(2 * CEI2.h$covariances$error[[1]]) #sigma2_eps
+Table3 <- c(GP.h_notime$betas,  #betas
+            exp(2 * GP.h_notime$covariances$indv[[1]]), #sigma^2_v0
+            exp(2 * GP.h_notime$covariances$indv[[2]][2] - GP.h_notime$covariances$indv[[2]][3])/2, #sigma^2_v1
+            exp(- GP.h_notime$covariances$indv[[2]][3]), #kappa_v1
+            GP.h_notime$covariances$indv[[2]][1], #delta_v
+            exp(2 * GP.h_notime$covariances$team[[1]]), # sigma^2_tau0
+            exp(2 * GP.h_notime$covariances$team[[2]][2] - GP.h_notime$covariances$team[[2]][3])/2, # sigma^2_tau1
+            GP.h_notime$covariances$team[[2]][1], #delta_tau
+            exp(- GP.h_notime$covariances$team[[2]][3]), #kappa_tau
+            exp(2 * GP.h_notime$covariances$error[[1]]) #sigma2_eps
             )  
 Table3 <- round(Table3,3)
 cat('Table3:\n')
@@ -147,7 +169,7 @@ print(Table3)
 #Figure 4
 ##########
 #generating the variances of each component
-Covs <- get.Cov(CEI2.h$covariances,CEI2.h$object)
+Covs <- get.Cov(GP.h_notime$covariances,GP.h_notime$object)
 
 dat <- data.frame(t = 0:3, 
                   VeY = diag(Covs$SigmaE),
@@ -192,4 +214,5 @@ Figure4 <- ggpubr::ggarrange(pvar, pperc,
                       ncol = 2, nrow = 1,
                       common.legend = T,
                       legend="bottom")
+ggsave('sherif_varianceplot2.pdf',Figure4, width = 8, height = 4)
 print(Figure4)

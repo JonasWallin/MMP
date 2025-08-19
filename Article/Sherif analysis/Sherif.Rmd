@@ -123,7 +123,8 @@ GP.h <- ce(y ~ 1,
            time = "time",
            data = sherifdat)
 ```
-And examine how the variability changes over time on group and individual level.
+And examine how the variability changes over time on group and individual level, we can see that the fitted model has similar dynamics as the raw data, i.e. the variance of group effects increases over time, while
+the variance of indivual effects decreases over time.
 ```{r fit model, echo=FALSE}
 Covs_inital.fit <- get.Cov(GP.h$covariances,GP.h$object)
 print('Variance for team effect over time')
@@ -137,7 +138,7 @@ print(diag(Covs_inital.fit$SigmaI))
 We now also explore if a linear random effect model for individuals could be better.
 ```{r linear random effect model, echo=FALSE}
 #random effects for indivuals
-CEI2.h <- ce(y ~ 1+time, 
+CEI2.h <- ce(y ~ 1, 
              ~ 1 | person, 
              ~ 1 | group, 
              emergence = ~ -1 + time, 
@@ -147,20 +148,18 @@ CEI2.h <- ce(y ~ 1+time,
              data = sherifdat)
 
 
-# random effect for groups not as complicate
 GP <- ce(y ~ 1+time, 
          ~ 1 | person, 
          ~ 1 + time | group, 
          emergence = ~ 1, 
          method = "GP",
          time = "time",
-         data = sherifdat,
-         optimize = FALSE)
+         data = sherifdat)
 ```
-The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process. While a random effect model for groups is clearly much wosrse.
+The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process. While a random effect model for groups is clearly much worse.
 ```{r AIC, echo=FALSE}
-cat('AIC_GP_GP = ', GP.h2$AIC,'\n')
-cat('AIC_CEI_GP = ', CEI2.h2$AIC,'\n')
+cat('AIC_GP_GP = ', GP.h$AIC,'\n')
+cat('AIC_CEI_GP = ', CEI2.h$AIC,'\n')
 cat('AIC_GP_L = ', GP$AIC,'\n')
 ```
 We can now examine how the variance components evolve over time in our best‐fitting model. Early on, individual‐level variability dominates, but by the final measurement occasion the group‐level variance takes over. Overall, the group effect starts small yet steadily increases, measurement error remains small, and individual variability declines. These patterns confirm a pronounced non‐stationary process at both the group and individual levels.
