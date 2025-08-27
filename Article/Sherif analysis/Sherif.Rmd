@@ -122,6 +122,7 @@ GP.h <- ce(y ~ 1,
            method.team = "OU.homeostasis",
            time = "time",
            data = sherifdat)
+
 ```
 And examine how the variability changes over time on group and individual level, we can see that the fitted model has similar dynamics as the raw data, i.e. the variance of group effects increases over time, while
 the variance of indivual effects decreases over time.

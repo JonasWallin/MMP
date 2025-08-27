@@ -427,7 +427,7 @@ estimate_error_team_effects <- function(param_list,
                                         control = list(maxit = 1000, trace = FALSE)) {
   nll <- function(p) -likelihood.errteam_avg(p, Obj$object)
   
-  fit1 <- optim(par = init_param, fn = nll, method = "BFGS", control = control)
+  fit1 <- optim(par = init_param, fn = nll, control = control)
   fit2 <- optim(par = fit1$par, fn = nll, method = "BFGS", control = control)
   
   # Write back ONLY error+team (exclude the first element mu)

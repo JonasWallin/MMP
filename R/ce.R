@@ -37,26 +37,31 @@ ce <- function(formula1,
   
   data$GP.type = GP.type
   object <- dataToObject(data)
-  if(is.null(param))
+  if(is.null(param)){
     param <- param0(object)
+    param.preval <- FALSE
+  }else{
+    param.preval <- TRUE
+  }
   
   if (model$Method == "GP") {
     res <-optim(param, function(x){-loglik(x, object, REML) },control = list(maxit=2))
    
   if(optimize){
-    paramList <- paramToList(res$par, object)
-    param.group <- c(mean(data[['y']][,1]),
-                     unlist(paramList$error),
-                     unlist(paramList$team)) # first parameter is mean of the group, rest is just random
-    paramList <- estimate_error_team_effects(paramList, list(object = object), 
-                                param.group)
-    param <- c(unlist(paramList$error),
-               unlist(paramList$indv))
-    paramList <- estimate_error_indv_effects(paramList, list(object = object), param)
-    param <- listToParam(paramList,object)
-    res <-optim(param, function(x){-loglik(x, object,REML ) })
+    if(param.preval==FALSE){
+      paramList <- paramToList(res$par, object)
+      param.group <- c(mean(data[['y']][,1]),
+                       unlist(paramList$error),
+                       unlist(paramList$team)) # first parameter is mean of the group, rest is just random
+      paramList <- estimate_error_team_effects(paramList, list(object = object), 
+                                  param.group)
+      param <- c(unlist(paramList$error),
+                 unlist(paramList$indv))
+      paramList <- estimate_error_indv_effects(paramList, list(object = object), param)
+      param <- listToParam(paramList,object)
+      res <-optim(param, function(x){-loglik(x, object,REML ) })
+    }
     res <-optim(res$par, function(x){-loglik(x, object, REML) })
-    
       if (res$convergence != 0) {
         res <-optim(res$par, function(x){-loglik(x, object, REML) },control = list(maxit=5000))
         if (res$convergence != 0) {
