@@ -109,8 +109,13 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
     ##
     # computing likelihood
     # lik = -0.5 * y^T (Sigma^-1 y)
-    Sigma12invY <- solve(t(L),y_i)
-    lik <- lik -0.5 * as.matrix(t(Sigma12invY)%*%Sigma12invY)
+    val <- tryCatch({
+      Sigma12invY <- solve(t(L), y_i)
+      -0.5 * sum(Sigma12invY^2)
+    }, error = function(e) -Inf)
+    if(val == -Inf)
+      return(list(lik =-Inf))
+    lik <- lik + val
 
 
     # add beta component!!!
