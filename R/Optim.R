@@ -1,4 +1,13 @@
 
+safe_loglik_term <- function(y, Sigma) {
+  tryCatch({
+    qf <- as.numeric(crossprod(y, solve(Sigma, y)))  
+    det_log <- determinant(Sigma, logarithm = TRUE)
+    if (det_log$sign != 1) return(-Inf)              # non PD or det<=0
+    -0.5 * (qf + as.numeric(det_log$modulus))        # (+ const if needed)
+  }, error = function(e) -Inf)
+}
+
 #' loglikelihood new
 #' @param - the parameters of the model
 #' @param - object type
@@ -393,7 +402,12 @@ likelihood.degroup <- function(param, Obj){
     if (any(eigen(Sigma_X)$values <= 0)) {
       return(Inf)
     }
-    loglik <- loglik -0.5 * (t(y_i) %*% solve(Sigma_X, y_i)) -0.5* log(det(Sigma_X)) 
+    
+    
+    ## use it like:
+    loglik <- loglik + safe_loglik_term(y_i, Sigma_X)
+    if(abs(loglik) == Inf)
+      return(-Inf)
   }
   
   return(loglik)
