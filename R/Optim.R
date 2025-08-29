@@ -404,15 +404,19 @@ likelihood.degroup <- function(param, Obj){
     
     # calculate the likelihood of y_i which is zero mean and covariance Sigma_X
     # check if Sigma_X si positive definite
-    if (any(eigen(Sigma_X)$values <= 0)) {
-      return(Inf)
-    }
+  #  print(Sigma_X)
+  #  print(eigen(Sigma_X)$values)
+  #  if (any(eigen(Sigma_X)$values <= 0)) {
+ #     return(Inf)
+  #  }
     
     
     ## use it like:
     loglik <- loglik + safe_loglik_term(y_i, Sigma_X)
-    if(abs(loglik) == Inf)
-      return(-Inf)
+ #   print(loglik)
+    if (!is.finite(loglik)) return(-Inf)
+  #  if(abs(loglik) == Inf)
+  #    return(-Inf)
   }
   
   return(loglik)

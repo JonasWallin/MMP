@@ -1,6 +1,4 @@
-library(dplyr)
-library(tidyr)
-library(Matrix)
+
 
 lag1_rho <- function(S, times) {
   o <- order(times); t <- times[o]; S <- S[o,o]
@@ -22,7 +20,7 @@ empirical_indiv_cov <- function(dat, time_col="time", group_col="group",
     mutate(u = y - ybar)
   W <- resid_df %>%
     select(id, time, u) %>%
-    pivot_wider(names_from = time, values_from = u) %>%
+    tidyr::pivot_wider(names_from = time, values_from = u) %>%
     arrange(id)
   M <- as.matrix(W[, -1, drop = FALSE]); storage.mode(M) <- "double"
   S <- cov(M, use = "pairwise.complete.obs")
@@ -35,7 +33,7 @@ empirical_team_cov <- function(dat, time_col="time", group_col="group", y_col="y
   gbar <- df %>%
     group_by(time, group) %>%
     summarise(ybar = mean(y, na.rm=TRUE), .groups="drop")
-  W <- gbar %>% pivot_wider(names_from = time, values_from = ybar) %>%
+  W <- gbar %>% tidyr::pivot_wider(names_from = time, values_from = ybar) %>%
     arrange(group)
   M <- as.matrix(W[,-1,drop=FALSE])
   storage.mode(M) <- "double"
@@ -48,7 +46,7 @@ empirical_team_cov <- function(dat, time_col="time", group_col="group", y_col="y
 empirical_total_cov <- function(dat, time_col="time", id_col="id_full", y_col="y"){
   df <- dat %>% rename(time=!!time_col, id=!!id_col, y=!!y_col)
   W <- df %>% select(id, time, y) %>%
-    pivot_wider(names_from = time, values_from = y) %>%
+    tidyr::pivot_wider(names_from = time, values_from = y) %>%
     arrange(id)
   M <- as.matrix(W[, -1, drop = FALSE]); storage.mode(M) <- "double"
   S <- cov(M, use = "pairwise.complete.obs")
