@@ -137,8 +137,29 @@ likAndBeta  <- function(param, Obj, REML=FALSE){
   # 
   if(is.null(Obj$X) ==F){
     
-    beta = solve(XtSigmainvX, t(ySigmainvX))
-    lik <- lik + 0.5 * ySigmainvX%*%beta
+    tc <- tryCatch({
+      beta <- solve(XtSigmainvX, t(ySigmainvX))
+      
+      # Guard against NaN/Inf in beta
+      if (any(!is.finite(beta))) stop("beta contains non-finite entries")
+      
+      val <- 0.5 * as.numeric(ySigmainvX %*% beta)
+      
+      # Guard against NaN/Inf in val
+      if (!is.finite(val)) stop("val is non-finite")
+      
+      list(beta = beta, val = val)
+    }, error = function(e) {
+      list(beta = NULL, val = -Inf)
+    })
+    
+    if (!is.finite(tc$val)) {
+      return(list(lik = -Inf))
+    }
+    
+    beta <- tc$beta
+    lik  <- lik + tc$val
+
     
     #use restitriced maximum likelihood
     if(REML==T){

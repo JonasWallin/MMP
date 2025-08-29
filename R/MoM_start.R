@@ -62,7 +62,7 @@ ou_start <- function(S, times) {
   sigma0 <- sqrt(max(2*theta0*var0, 1e-8))
   log(c(sigma0, theta0))  # your OUcov expects exp()
 }
-## -- Wrapper that matches your GP.h$object$teamCovs ----------------------------
+## -- Wrapper that matches your obj$object$teamCovs ----------------------------
 get_team_mom_starts <- function(obj, group_col="group", y_col="y"){
   emp  <- empirical_team_cov(obj$model$dat, obj$model$Time, group_col, y_col)
   S    <- emp$S
@@ -79,7 +79,7 @@ get_team_mom_starts <- function(obj, group_col="group", y_col="y"){
       starts[[k]] <- c(0, par)
       
     }else if (identical(nm, "XCov")){
-      X1 <- GP.h$object$teams[[1]]$X  # adjust if your slot is different
+      X1 <- obj$object$teams[[1]]$X  # adjust if your slot is different
       
       if (!is.null(X1) && ncol(X1) == 1 && colnames(X1)[1] == "(Intercept)") {
         # pdLogChol uses log-Cholesky params.
