@@ -2,7 +2,9 @@
 title: "Sherif_analysis"
 author: "Yvette Baurne, Frederic Delmar, and Jonas Wallin"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -24,12 +26,15 @@ sherifdat <- subset(sherifdat, time <= 3)
 ```
 
 
-```{r figure, echo=FALSE}
+```{r figure, echo=TRUE}
 fig1 <- ggplot(data=sherifdat, 
-               aes(x=time,y=y, linetype = factor(person, labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
+               aes(x=time,y=y, 
+               linetype = factor(person,
+                        labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
   geom_line(linewidth=0.5) + xlab("Time") + ylab("Inches") +
   guides(linetype=guide_legend(title="Subjects within each group")) +
-  scale_x_continuous(sec.axis = sec_axis(~.*1,labels = c("indv", "group", "group", "group")))
+  scale_x_continuous(sec.axis = sec_axis(~.*1,
+                              labels =  c("indv", "group", "group", "group")))
 
 fig1 <- fig1 +  facet_wrap(~group, ncol = 4) + 
   # labs(title = "Sherif (1935) autokinetic data") + 
@@ -44,7 +49,8 @@ fig1 <- fig1 +  facet_wrap(~group, ncol = 4) +
 print(fig1)
 ```
 We next examine group‐level dynamics by averaging each group’s responses over time and plotting these means together. The trajectories hint at some autoregressive pattern. We also observe that between‐group variability appears to grow over the measurement occasions, but with only eight groups this trend should be interpreted cautiously.
-```{r grouped depence, echo=FALSE}
+
+```{r, echo=TRUE}
 group_time_summary <- sherifdat %>%
   group_by(group, time) %>%
   summarise(
@@ -55,7 +61,7 @@ group_time_summary <- sherifdat %>%
 fig <- ggplot(group_time_summary, aes(x = time, y = y_mean, 
                                group = factor(group), 
                                color = factor(group))) +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
   geom_point(size = 2) +
   labs(
     title = "Mean Response Over Time by Group",
@@ -76,7 +82,8 @@ print(var_df)
 ```
 
 We also examine individual deviations after subtracting each group’s mean. The resulting plots reveal a strong, non‐stationary “consensus emergence,” where subjects converge toward the group average over time. There is some suggestion of autoregressive dynamics in these deviations, but the dominant convergence effect makes it difficult to distinguish clearly.
-```{r degrouped depence, echo=FALSE}
+
+```{r, echo=TRUE}
 sherifdat_cell_demeaned <- sherifdat %>%
   group_by(group, time) %>%
   mutate(
@@ -87,10 +94,12 @@ sherifdat_cell_demeaned <- sherifdat %>%
   ungroup()
 
 fig1 <- ggplot(data=sherifdat_cell_demeaned, 
-               aes(x=time,y=y_demeaned, linetype = factor(person, labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
+               aes(x=time,y=y_demeaned, linetype = factor(person,
+                          labels = c("Subject 1", "Subject 2", "Subject 3")))) + 
   geom_line(linewidth=0.5) + xlab("Time") + ylab("Inches") +
   guides(linetype=guide_legend(title="Subjects within each group")) +
-  scale_x_continuous(sec.axis = sec_axis(~.*1,labels = c("indv", "group", "group", "group" )))
+  scale_x_continuous(sec.axis = sec_axis(~.*1,
+                              labels = c("indv", "group", "group", "group" )))
 
 fig1 <- fig1 +  facet_wrap(~group, ncol = 4) + 
   # labs(title = "Sherif (1935) autokinetic data") + 
@@ -113,7 +122,7 @@ print(var_time_df)
 
 ```
 We then fit a baseline model to these data. 
-```{r fit model, echo=FALSE}
+```{r fit model}
 GP.h <- ce(y ~ 1, 
            ~ 1 | person, 
            ~ 1 | group, 
@@ -125,8 +134,8 @@ GP.h <- ce(y ~ 1,
 
 ```
 And examine how the variability changes over time on group and individual level, we can see that the fitted model has similar dynamics as the raw data, i.e. the variance of group effects increases over time, while
-the variance of indivual effects decreases over time.
-```{r fit model, echo=FALSE}
+the variance of individual effects decreases over time.
+```{r cov}
 Covs_inital.fit <- get.Cov(GP.h$covariances,GP.h$object)
 print('Variance for team effect over time')
 print(diag(Covs_inital.fit$SigmaT))
@@ -137,7 +146,7 @@ print(diag(Covs_inital.fit$SigmaI))
 
 
 We now also explore if a linear random effect model for individuals could be better.
-```{r linear random effect model, echo=FALSE}
+```{r linear random effect model}
 #random effects for indivuals
 CEI2.h <- ce(y ~ 1, 
              ~ 1 | person, 
@@ -158,14 +167,15 @@ GP <- ce(y ~ 1+time,
          data = sherifdat)
 ```
 The random effect on the group level is much worse, compared to fitting Gaussian processes on two levels. The random effect on individual level is basically equivalent to the Gaussian process. While a random effect model for groups is clearly much worse.
-```{r AIC, echo=FALSE}
+```{r AIC}
 cat('AIC_GP_GP = ', GP.h$AIC,'\n')
 cat('AIC_CEI_GP = ', CEI2.h$AIC,'\n')
 cat('AIC_GP_L = ', GP$AIC,'\n')
 ```
 We can now examine how the variance components evolve over time in our best‐fitting model. Early on, individual‐level variability dominates, but by the final measurement occasion the group‐level variance takes over. Overall, the group effect starts small yet steadily increases, measurement error remains small, and individual variability declines. These patterns confirm a pronounced non‐stationary process at both the group and individual levels.
-```{r variance, echo=FALSE}
-Covs <- get.Cov(GP.h2$covariances,GP.h2$object)
+
+```{r variance}
+Covs <- get.Cov(GP.h$covariances,GP.h$object)
 
 dat <- data.frame(t = 0:3, 
                   VeY = diag(Covs$SigmaE),
@@ -187,9 +197,12 @@ pvar <- dat %>%
   theme_bw()+
   ylab("Variance") +
   xlab("Time") +
-  #  scale_color_discrete(name="",labels = c("VeY" = TeX('$\\V[e^Y_{tij}]$'),"VG" = TeX('$\\V[G_{tij}]$'),"VP" = TeX('$\\V[P_{tij}]$'),"VY" = TeX('$\\V[Y_{tij}]$')))+
-  scale_color_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
-  scale_linetype_discrete(name="Level",labels = c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),breaks=c("VeY","VP","VG","VY"))+
+  scale_color_discrete(name="Level",labels =
+    c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),
+    breaks=c("VeY","VP","VG","VY"))+
+  scale_linetype_discrete(name="Level",labels =
+    c("VeY" = "Measurement","VP" = "Individual","VG" = "Group","VY" = "Total"),
+              breaks=c("VeY","VP","VG","VY"))+
   theme(legend.position = "none")
 
 pperc <- dat %>% 
@@ -200,9 +213,14 @@ pperc <- dat %>%
   theme_bw()+
   ylab("Proportion") +
   xlab("Time") +
-  # scale_color_discrete(name="",labels = c("PVeY" = TeX('$\\V[e^Y_{tij}]$'),"PVG" = TeX('$\\V[G_{tij}]$'),"PVP" = TeX('$\\V[P_{tij}]$'),"PVY" = TeX('$\\V[Y_{tij}]$')))+
-  scale_color_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
-  scale_linetype_discrete(name="Level",labels = c("PVeY" = "Measurement","PVP" = "Individual","PVG" = "Group","PVY" = "Total"),breaks=c("PVeY","PVP","PVG","PVY"))+
+  scale_color_discrete(name="Level",
+  labels = c("PVeY" = "Measurement","PVP" = "Individual",
+             "PVG" = "Group","PVY" = "Total"),
+  breaks=c("PVeY","PVP","PVG","PVY"))+
+  scale_linetype_discrete(name="Level",
+labels = c("PVeY" = "Measurement","PVP" = "Individual",
+           "PVG" = "Group","PVY" = "Total"),
+breaks=c("PVeY","PVP","PVG","PVY"))+
   theme(legend.position = "right")
 
 Figure4 <- ggpubr::ggarrange(pvar, pperc, 
@@ -217,12 +235,13 @@ Finally we also show how a prediction of a individual future response also what 
 increasing variability of the group effect. It should be noted that the exact form of this variability
 is rather uncertain. We can also see that the 95% prediction intervals goes down next two the observations. This is since we have rather small measurement error we are rather certain of the value
 of the processes at the measurement locations. 
-```{r prediction, echo=FALSE}
+
+```{r prediction}
 n.time = 100
 sherifdat.new <- data.frame(person = c(rep(1,n.time)),
                             group  = c(rep(1,n.time)),
                             time   = c(seq(0,4.5,length.out = n.time) ))
-pred.data.new   <- predict.ce(GP.h2, sherifdat.new)
+pred.data.new   <- predict.ce(GP.h, sherifdat.new)
 # 1) Build a data frame of predictions + CIs
 pred_df <- tibble(
   time = sherifdat.new$time,
@@ -242,7 +261,7 @@ obs_df <- sherifdat %>%
 fig <- ggplot(pred_df, aes(x = time)) +
   geom_ribbon(aes(ymin = lower, ymax = upper),
               fill = "firebrick", alpha = 0.2) +
-  geom_line(aes(y = fit), color = "firebrick", size = 1) +
+  geom_line(aes(y = fit), color = "firebrick", linewidth = 1) +
   geom_point(data = obs_df, aes(x = time, y = y),
              color = "steelblue", size = 2) +
   labs(
